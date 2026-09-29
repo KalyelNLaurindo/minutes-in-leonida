@@ -155,7 +155,7 @@ button { cursor: pointer; }
 .app-shell { min-height: 100svh; background: var(--background); color: var(--foreground); position: relative; overflow: hidden; }
 .scenery { position: absolute; inset: 0; min-height: 100svh; background-position: center top; background-size: cover; pointer-events: none; }
 .app-content { position: relative; z-index: 1; min-height: 100svh; display: flex; flex-direction: column; }
-.site-header { width: min(calc(100% - 48px), 1280px); min-height: 72px; margin: 18px auto 0; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid oklch(1 0 0 / 16%); border-radius: 20px; background: oklch(0.2 0.035 305 / 56%); backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%); box-shadow: 0 12px 36px oklch(0.02 0.02 300 / 28%), inset 0 1px oklch(1 0 0 / 10%); }
+.site-header { width: min(calc(100% - 48px), 1800px); min-height: 72px; margin: 18px auto 0; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid oklch(1 0 0 / 16%); border-radius: 20px; background: oklch(0.2 0.035 305 / 56%); backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%); box-shadow: 0 12px 36px oklch(0.02 0.02 300 / 28%), inset 0 1px oklch(1 0 0 / 10%); }
 .brand-button { height: auto; padding: 0; text-align: left; }
 .brand-lockup { display: flex; align-items: center; gap: 10px; }
 .brand-mark { display: block; width: auto; height: 38px; object-fit: contain; }
