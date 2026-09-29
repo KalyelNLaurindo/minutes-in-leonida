@@ -18,7 +18,6 @@ import {
   Download,
   Clock3,
   X,
-  Languages,
   Gamepad2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -198,15 +197,18 @@ function Header({
           className="language-switch"
           title={locale === "pt" ? "Idioma" : locale === "en" ? "Language" : "Idioma"}
         >
-          <Languages aria-hidden="true" />
+          <span className="language-mark" aria-hidden="true">
+            <span>文</span>
+            <span>A</span>
+          </span>
           <select
             value={locale}
             aria-label={locale === "pt" ? "Idioma" : locale === "en" ? "Language" : "Idioma"}
             onChange={(event) => setLocale(event.target.value as Locale)}
           >
-            <option value="pt">Português</option>
-            <option value="en">English</option>
-            <option value="es">Español</option>
+            <option value="pt">🇧🇷 PT</option>
+            <option value="en">🇺🇸 EN</option>
+            <option value="es">🇪🇸 ES</option>
           </select>
         </label>
       </nav>
