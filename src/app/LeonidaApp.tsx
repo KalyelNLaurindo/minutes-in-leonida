@@ -94,7 +94,7 @@ function Confirm({
     </AlertDialog>
   );
 }
-function Header({ view, go, active }: { view: View; go: (v: View) => void; active: boolean }) {
+function Header({ go, active }: { go: (v: View) => void; active: boolean }) {
   return (
     <header className="site-header">
       <Button
@@ -103,28 +103,39 @@ function Header({ view, go, active }: { view: View; go: (v: View) => void; activ
         onClick={() => go(active ? "session" : "home")}
         aria-label="Início"
       >
-        <Logo />
+        <span className="brand-lockup">
+          <img className="brand-mark" src="/brand/vi-mark.png" alt="" />
+          <Logo />
+        </span>
       </Button>
-      <div className="header-right">
+      <nav className="header-nav" aria-label="Navegação principal">
         <Button
           variant="ghost"
-          size="icon"
           title="Início"
           aria-label="Início"
           onClick={() => go("home")}
         >
           <Home />
+          <span className="header-nav-label">Início</span>
+        </Button>
+        <Button variant="ghost" title="Jogadores" aria-label="Jogadores" onClick={() => go("players")}>
+          <Users />
+          <span className="header-nav-label">Jogadores</span>
+        </Button>
+        <Button variant="ghost" title="Histórico" aria-label="Histórico" onClick={() => go("history")}>
+          <History />
+          <span className="header-nav-label">Histórico</span>
         </Button>
         <Button
           variant="ghost"
-          size="icon"
           title="Configurações"
           aria-label="Configurações"
           onClick={() => go("settings")}
         >
           <Settings2 />
+          <span className="header-nav-label">Ajustes</span>
         </Button>
-      </div>
+      </nav>
     </header>
   );
 }
@@ -183,7 +194,7 @@ export default function LeonidaApp() {
         }}
       />
       <div className="app-content">
-        <Header view={currentView} go={go} active={!!active} />
+        <Header go={go} active={!!active} />
         {game.persistence.message && (
           <div
             className={`persistence-notice ${game.persistence.state === "unsaved" ? "persistence-error" : ""}`}
@@ -227,14 +238,6 @@ export default function LeonidaApp() {
             </div>
             <div className="home-bottom">
               <div className="home-edition">01 / O TEMPO É REI</div>
-              <div className="home-shortcuts">
-                <Button variant="ghost" onClick={() => go("players")}>
-                  <Users /> Jogadores
-                </Button>
-                <Button variant="ghost" onClick={() => go("history")}>
-                  <History /> Histórico
-                </Button>
-              </div>
             </div>
           </main>
         )}
