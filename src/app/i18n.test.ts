@@ -21,7 +21,7 @@ describe("locales", () => {
     expect(
       translate(
         "en",
-        "Escolha de 2 a 4 pessoas. Cada turno terá 25 minutos; a ordem será sorteada.",
+        "Escolha de 2 a 10 pessoas. Cada turno terá 25 minutos; a ordem será sorteada.",
       ),
     ).toContain("Each turn lasts 25 minutes");
     expect(translate("es", "Remover Ana?")).toBe("¿Eliminar a Ana?");

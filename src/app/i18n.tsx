@@ -39,6 +39,8 @@ const dictionaries: Record<Locale, Record<string, string>> = {
     "Sortear a ordem": "Draw the order",
     "Jogar o turno": "Play your turn",
     "Passar o controle": "Pass the controller",
+    "Selecionar todos": "Select all",
+    "Desmarcar todos": "Clear selection",
     "01 / O TEMPO É REI": "01 / TIME RULES",
     "Adicionar jogador": "Add player",
     "SORTEAR ORDEM": "DRAW THE ORDER",
@@ -165,12 +167,12 @@ const dictionaries: Record<Locale, Record<string, string>> = {
     "Esta cópia não pode ser restaurada.": "This backup cannot be restored.",
     "Restaurar cópia": "Restore backup",
     "Copiar de segurança": "Back up data",
-    "/ 4 SELECIONADOS": "/ 4 SELECTED",
+    "/ 10 SELECIONADOS": "/ 10 SELECTED",
     "NOVA SESSÃO / 01": "NEW SESSION / 01",
     "Cara ou coroa. O destino escolheu quem começa.": "Heads or tails. Fate picked who goes first.",
     "A cidade escolheu quem vai primeiro.": "The city picked who goes first.",
-    "Escolha de 2 a 4 pessoas. Cada turno terá minutos; a ordem será sorteada.":
-      "Choose 2 to 4 players. Each turn lasts minutes; the order will be drawn.",
+    "Escolha de 2 a 10 pessoas. Cada turno terá minutos; a ordem será sorteada.":
+      "Choose 2 to 10 players. Each turn lasts minutes; the order will be drawn.",
     "Nome inválido.": "Invalid name.",
     "Não foi possível exportar o placar da sessão.": "Could not export the session score.",
     "Não foi possível sortear a ordem.": "Could not draw the order.",
@@ -386,13 +388,15 @@ const dictionaries: Record<Locale, Record<string, string>> = {
     "Cópia restaurada e salva neste aparelho.": "Copia restaurada y guardada en este dispositivo.",
     "Restaurar cópia": "Restaurar copia",
     "Copiar de segurança": "Crear copia de seguridad",
-    "/ 4 SELECIONADOS": "/ 4 SELECCIONADOS",
+    "/ 10 SELECIONADOS": "/ 10 SELECCIONADOS",
+    "Selecionar todos": "Seleccionar todos",
+    "Desmarcar todos": "Quitar selección",
     "NOVA SESSÃO / 01": "NUEVA SESIÓN / 01",
     "Cara ou coroa. O destino escolheu quem começa.":
       "Cara o cruz. El destino eligió quién empieza.",
     "A cidade escolheu quem vai primeiro.": "La ciudad eligió quién va primero.",
-    "Escolha de 2 a 4 pessoas. Cada turno terá minutos; a ordem será sorteada.":
-      "Elige de 2 a 4 personas. Cada turno dura minutos; se sorteará el orden.",
+    "Escolha de 2 a 10 pessoas. Cada turno terá minutos; a ordem será sorteada.":
+      "Elige de 2 a 10 personas. Cada turno dura minutos; se sorteará el orden.",
     "Nome inválido.": "Nombre no válido.",
     "Não foi possível exportar o placar da sessão.":
       "No se pudo exportar el marcador de la sesión.",
@@ -463,15 +467,15 @@ export const LocaleContext = createContext<Locale>("pt");
 export function translate(locale: Locale, text: string): string {
   const key = text.trim().replace(/\s+/g, " ");
   const durationChoice = key.match(
-    /^Escolha de 2 a 4 pessoas\. Cada turno terá (\d+) minutos; a ordem será sorteada\.$/,
+    /^Escolha de 2 a 10 pessoas\. Cada turno terá (\d+) minutos; a ordem será sorteada\.$/,
   );
   const removePlayer = key.match(/^Remover (.+)\?$/);
   const removePreset = key.match(/^Remover preset de (\d+) minutos$/);
   const dynamic = durationChoice
     ? locale === "en"
-      ? `Choose 2 to 4 players. Each turn lasts ${durationChoice[1]} minutes; the order will be drawn.`
+      ? `Choose 2 to 10 players. Each turn lasts ${durationChoice[1]} minutes; the order will be drawn.`
       : locale === "es"
-        ? `Elige de 2 a 4 personas. Cada turno dura ${durationChoice[1]} minutos; se sorteará el orden.`
+        ? `Elige de 2 a 10 personas. Cada turno dura ${durationChoice[1]} minutos; se sorteará el orden.`
         : undefined
     : removePlayer
       ? locale === "en"

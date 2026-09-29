@@ -37,6 +37,8 @@ import { useGame, type Game } from "./useGame";
 import {
   clockText,
   durationText,
+  MAX_PLAYERS,
+  MIN_SESSION_PLAYERS,
   remaining,
   stats,
   type Player,
@@ -447,7 +449,7 @@ export default function LeonidaApp() {
             <Page
               title="QUEM JOGA?"
               kicker="NOVA SESSÃO / 01"
-              description={`Escolha de 2 a 4 pessoas. Cada turno terá ${data.settings.selectedTurnMinutes} minutos; a ordem será sorteada.`}
+              description={`Escolha de ${MIN_SESSION_PLAYERS} a ${MAX_PLAYERS} pessoas. Cada turno terá ${data.settings.selectedTurnMinutes} minutos; a ordem será sorteada.`}
               back={() => go("home")}
             >
               <div className="selection-list">
@@ -462,7 +464,7 @@ export default function LeonidaApp() {
                         setSelected((ids) =>
                           chosen
                             ? ids.filter((id) => id !== p.id)
-                            : ids.length < 4
+                            : ids.length < MAX_PLAYERS
                               ? [...ids, p.id]
                               : ids,
                         )
@@ -477,8 +479,26 @@ export default function LeonidaApp() {
               </div>
               <div className="selection-footer">
                 <span>
-                  {selected.length} <L> / 4 SELECIONADOS</L>
+                  {selected.length} <L> / 10 SELECIONADOS</L>
                 </span>
+                <Button
+                  variant="ghost"
+                  disabled={data.players.length === 0}
+                  onClick={() =>
+                    setSelected((ids) =>
+                      data.players.every((player) => ids.includes(player.id))
+                        ? []
+                        : data.players.map((player) => player.id),
+                    )
+                  }
+                >
+                  <L>
+                    {data.players.length > 0 &&
+                    data.players.every((player) => selected.includes(player.id))
+                      ? "Desmarcar todos"
+                      : "Selecionar todos"}
+                  </L>
+                </Button>
                 <Button variant="ghost" onClick={() => go("players")}>
                   <Plus /> <L> Adicionar jogador</L>
                 </Button>
