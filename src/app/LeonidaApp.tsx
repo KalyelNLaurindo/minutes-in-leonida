@@ -210,8 +210,8 @@ export default function LeonidaApp() {
                 <span>IN LEONIDA</span>
               </h1>
               <p>
-                Vão jogar GTA VI em turma, mas só há um controle? Revezem os turnos e tentem não
-                chamar a polícia no caminho.
+                A turma vai se aventurar pelas ruas da Cidade do Vício, mas só tem um controle?
+                Revezem os turnos e tentem não chamar a polícia no caminho.
               </p>
               <Button
                 className="primary-cta"
