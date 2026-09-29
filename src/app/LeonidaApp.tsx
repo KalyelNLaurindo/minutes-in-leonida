@@ -219,6 +219,13 @@ export default function LeonidaApp() {
               >
                 MONTAR SESSÃO <ArrowRight />
               </Button>
+              <div className="home-steps" aria-label="Como funciona">
+                <span>Sortear a ordem</span>
+                <ArrowRight aria-hidden="true" />
+                <span>Jogar o turno</span>
+                <ArrowRight aria-hidden="true" />
+                <span>Passar o controle</span>
+              </div>
             </div>
             <div className="home-bottom">
               <div className="home-edition">01 / O TEMPO É REI</div>
