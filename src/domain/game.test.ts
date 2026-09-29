@@ -8,6 +8,7 @@ import {
   resume,
   shuffle,
   start,
+  suspend,
   stats,
   TURN_DURATION_MS,
   type Player,
@@ -71,6 +72,16 @@ describe("game rules", () => {
     const resumed = resume(s, 600000);
     expect(remaining(resumed, 603000)).toBe(TURN_DURATION_MS - 8000);
     expect(() => resume(resumed, 700000)).toThrow();
+  });
+  it("suspends a session for Home and resumes its saved remaining time", () => {
+    const suspended = suspend(start(ordered(2), 100), 5_100);
+    expect(suspended.status).toBe("SUSPENDED");
+    expect(remaining(suspended, 500_000)).toBe(TURN_DURATION_MS - 5_000);
+    const resumed = resume(suspended, 600_000);
+    expect(resumed.status).toBe("ACTIVE");
+    expect(remaining(resumed, 603_000)).toBe(TURN_DURATION_MS - 8_000);
+    expect(end(suspended, 900_000).status).toBe("ENDED");
+    expect(() => suspend(ordered(2), 1_000)).toThrow();
   });
   it("reconciles active time on reopening", () => {
     const s = start(ordered(2), 100);

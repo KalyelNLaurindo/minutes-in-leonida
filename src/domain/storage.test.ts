@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { advance, createSession, defaults, start, type AppData, type Player } from "./game";
+import {
+  advance,
+  createSession,
+  defaults,
+  start,
+  suspend,
+  type AppData,
+  type Player,
+} from "./game";
 import { decodeBackup, isAppData, isRepositoryKey, load, save } from "./storage";
 
 /** Small Storage-compatible double keeps repository tests independent from a browser. */
@@ -159,5 +167,15 @@ describe("versioned local repository", () => {
     expect(restored?.turnDurationMs).toBe(5 * 60_000);
     expect(restored?.turns[0]?.activeDurationMs).toBe(3_000);
     expect(restored?.index).toBe(1);
+  });
+
+  it("persists and validates a suspended session for later resumption", () => {
+    vi.stubGlobal("localStorage", storage);
+    const suspended = suspend(sampleData().session!, 5_000);
+    const data = { ...defaults, players, session: suspended };
+
+    expect(isAppData(data)).toBe(true);
+    expect(save(data).ok).toBe(true);
+    expect(load().data.session?.status).toBe("SUSPENDED");
   });
 });

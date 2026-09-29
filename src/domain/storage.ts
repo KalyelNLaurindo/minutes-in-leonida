@@ -1,5 +1,6 @@
 import {
   DEFAULT_TURN_MINUTES,
+  MAX_PLAYERS,
   MAX_TURN_MINUTES,
   MIN_TURN_MINUTES,
   defaults,
@@ -60,6 +61,7 @@ const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
 
 function validPlayer(value: unknown): value is Player {
+  const icons = ["revolver", "vest", "money", "car", "star"];
   return (
     isRecord(value) &&
     typeof value.id === "string" &&
@@ -69,7 +71,11 @@ function validPlayer(value: unknown): value is Player {
     value.name.length <= 24 &&
     Number.isInteger(value.color) &&
     Number(value.color) >= 0 &&
-    Number(value.color) <= 3
+    Number(value.color) <= 3 &&
+    (value["customColor"] === undefined ||
+      (typeof value["customColor"] === "string" &&
+        /^#[\da-fA-F]{6}$/.test(value["customColor"]))) &&
+    (value["icon"] === undefined || icons.includes(String(value["icon"])))
   );
 }
 
@@ -98,6 +104,8 @@ function validSession(value: unknown): value is Session {
   if (
     !isRecord(value) ||
     !Array.isArray(value.players) ||
+    value.players.length < 2 ||
+    value.players.length > MAX_PLAYERS ||
     !value.players.every(validPlayer) ||
     !Array.isArray(value.turns) ||
     !value.turns.every(validTurn)
@@ -115,7 +123,7 @@ function validSession(value: unknown): value is Session {
     )
   )
     return false;
-  const statuses = ["ORDER_READY", "ACTIVE", "PAUSED", "ENDED"];
+  const statuses = ["ORDER_READY", "ACTIVE", "PAUSED", "SUSPENDED", "ENDED"];
   return (
     typeof value.id === "string" &&
     statuses.includes(String(value.status)) &&
@@ -165,6 +173,7 @@ export function isAppData(value: unknown): value is AppData {
     isRecord(value) &&
     value.version === 2 &&
     Array.isArray(value.players) &&
+    value.players.length <= MAX_PLAYERS &&
     value.players.every(validPlayer) &&
     new Set(value.players.map((player: Player) => player.id)).size === value.players.length &&
     Array.isArray(value.history) &&

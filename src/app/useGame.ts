@@ -5,13 +5,16 @@ import {
   defaults,
   end,
   normalizeMinutes,
+  MAX_PLAYERS,
   pause,
   remaining,
   resume,
   start,
+  suspend,
   uid,
   type AppData,
   type Player,
+  type PlayerIcon,
   type Settings,
 } from "../domain/game";
 import { clear, decodeBackup, isRepositoryKey, limitHistory, load, save } from "../domain/storage";
@@ -23,7 +26,7 @@ export function useGame() {
   const [data, setData] = useState<AppData>(defaults);
   const [ready, setReady] = useState(false);
   const [now, setNow] = useState(Date.now());
-  const [signal, setSignal] = useState<"death" | "timeout" | null>(null);
+  const [signal, setSignal] = useState<"death" | "timeout" | "pause" | "resume" | null>(null);
   const [persistence, setPersistence] = useState<{ state: PersistenceState; message?: string }>({
     state: "saved",
   });
@@ -120,6 +123,8 @@ export function useGame() {
   };
 
   const addPlayer = (name: string, color: number) => {
+    if (dataRef.current.players.length >= MAX_PLAYERS)
+      throw new Error(`A lista já tem o máximo de ${MAX_PLAYERS} jogadores.`);
     const trimmed = name.trim().replace(/\s+/g, " ");
     if (!trimmed || trimmed.length > 24) throw new Error("Use um nome de 1 a 24 caracteres.");
     validateColor(color);
@@ -159,6 +164,23 @@ export function useGame() {
     }));
   };
 
+  const updatePlayerAppearance = (id: string, customColor: string, icon: PlayerIcon | null) => {
+    if (!/^#[\da-fA-F]{6}$/.test(customColor))
+      throw new Error("Informe uma cor hexadecimal no formato #RRGGBB.");
+    if (!dataRef.current.players.some((player) => player.id === id))
+      throw new Error("Jogador não encontrado.");
+    mutate((current) => ({
+      ...current,
+      players: current.players.map((player) => {
+        if (player.id !== id) return player;
+        const updated = { ...player, customColor: customColor.toUpperCase() };
+        if (icon) updated.icon = icon;
+        else delete updated.icon;
+        return updated;
+      }),
+    }));
+  };
+
   const removePlayer = (id: string) =>
     mutate((current) => ({
       ...current,
@@ -194,7 +216,9 @@ export function useGame() {
     }
   };
 
-  const togglePause = () =>
+  const togglePause = () => {
+    const session = dataRef.current.session;
+    if (!session) return;
     mutate((current) => {
       const session = current.session;
       if (!session) return current;
@@ -203,6 +227,17 @@ export function useGame() {
         session:
           session.status === "ACTIVE" ? pause(session, Date.now()) : resume(session, Date.now()),
       };
+    });
+    setSignal(session.status === "ACTIVE" ? "pause" : "resume");
+  };
+
+  const suspendSession = () =>
+    mutate((current) => {
+      const session = current.session;
+      if (!session) return current;
+      if (session.status === "ORDER_READY" || session.status === "ENDED")
+        throw new Error("Apenas uma sessão iniciada pode ser suspensa.");
+      return { ...current, session: suspend(session, Date.now()) };
     });
 
   const finish = () =>
@@ -264,11 +299,13 @@ export function useGame() {
     persistence,
     addPlayer,
     editPlayer,
+    updatePlayerAppearance,
     removePlayer,
     draw,
     begin,
     die,
     togglePause,
+    suspendSession,
     finish,
     discardDraw,
     changeSettings,

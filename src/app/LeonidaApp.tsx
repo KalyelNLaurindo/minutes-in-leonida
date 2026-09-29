@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -47,7 +47,16 @@ import { buildSessionReport } from "../domain/report";
 import scenery from "../assets/leonida-night.jpg";
 import { L, LocaleContext, translate, type Locale } from "./i18n";
 
-type View = "home" | "players" | "setup" | "draw" | "session" | "history" | "settings" | "summary";
+type View =
+  | "home"
+  | "players"
+  | "setup"
+  | "drawing"
+  | "draw"
+  | "session"
+  | "history"
+  | "settings"
+  | "summary";
 const palettes = ["tone-pink", "tone-orange", "tone-blue", "tone-lime"];
 function Avatar({ player, size = "normal" }: { player: Player; size?: "normal" | "large" }) {
   return (
@@ -235,20 +244,57 @@ export default function LeonidaApp() {
   };
   const session = data.session;
   const active = session?.status === "ACTIVE" || session?.status === "PAUSED";
-  const currentView: View =
-    active && view === "home"
-      ? "session"
-      : session?.status === "ORDER_READY" && view === "home"
-        ? "draw"
-        : view;
+  const currentView = view;
   const go = (v: View) => {
+    // Leaving the play flow freezes the clock and keeps the unfinished session resumable.
+    if (v !== "session" && (session?.status === "ACTIVE" || session?.status === "PAUSED")) {
+      try {
+        game.suspendSession();
+        setActionError("");
+      } catch (error) {
+        setActionError(
+          error instanceof Error ? error.message : "Não foi possível suspender a sessão.",
+        );
+        return;
+      }
+    }
     setView(v);
     window.scrollTo(0, 0);
+  };
+  useEffect(() => {
+    if (view !== "drawing") return;
+    const timer = window.setTimeout(() => {
+      setView("draw");
+      window.scrollTo(0, 0);
+    }, 1_250);
+    return () => window.clearTimeout(timer);
+  }, [view]);
+  const continueSession = () => {
+    if (!session) return;
+    if (session.status === "ORDER_READY") {
+      go("draw");
+      return;
+    }
+    if (session.status === "SUSPENDED" || session.status === "PAUSED") {
+      try {
+        game.togglePause();
+        setActionError("");
+      } catch (error) {
+        setActionError(error instanceof Error ? error.message : "Não foi possível retomar.");
+        return;
+      }
+    }
+    go("session");
   };
   if (!ready)
     return (
       <main className="app-shell loading-state">
         <Logo />
+        <span
+          className="loading-spinner"
+          role="status"
+          aria-label={translate(locale, "Carregando")}
+        />
       </main>
     );
   return (
@@ -301,13 +347,15 @@ export default function LeonidaApp() {
                     Revezem os turnos e tentem não chamar a polícia no caminho.
                   </L>
                 </p>
-                <Button
-                  className="primary-cta"
-                  onClick={() => go(data.players.length >= 2 ? "setup" : "players")}
-                >
-                  <L>MONTAR SESSÃO </L>
-                  <ArrowRight />
-                </Button>
+                {!session && (
+                  <Button
+                    className="primary-cta"
+                    onClick={() => go(data.players.length >= 2 ? "setup" : "players")}
+                  >
+                    <L>JOGAR</L>
+                    <ArrowRight />
+                  </Button>
+                )}
                 <div className="home-steps" aria-label={translate(locale, "Como funciona")}>
                   <div className="home-step">
                     <DrawBoxIcon />
@@ -331,6 +379,32 @@ export default function LeonidaApp() {
                   </div>
                 </div>
               </div>
+              {session && (
+                <section
+                  className="resume-session-card"
+                  aria-label={translate(locale, "Sessão suspensa")}
+                >
+                  <div>
+                    <span className="eyebrow">
+                      <L>
+                        {session.status === "ORDER_READY"
+                          ? "SORTEIO PRONTO"
+                          : session.status === "ACTIVE"
+                            ? "SESSÃO EM ANDAMENTO"
+                            : "SESSÃO SUSPENSA"}
+                      </L>
+                    </span>
+                    <strong>{session.players.map((player) => player.name).join(" · ")}</strong>
+                    <small>
+                      <L>Retome de onde vocês pararam.</L>
+                    </small>
+                  </div>
+                  <Button variant="outline" onClick={continueSession}>
+                    <Play />
+                    <L>Retomar sessão</L>
+                  </Button>
+                </section>
+              )}
               <div className="home-bottom">
                 <div className="home-edition">
                   <L>01 / O TEMPO É REI</L>
@@ -410,7 +484,7 @@ export default function LeonidaApp() {
                           .filter((p): p is Player => !!p),
                       );
                       setActionError("");
-                      go("draw");
+                      go("drawing");
                     } catch (error) {
                       setActionError(
                         error instanceof Error
@@ -460,6 +534,7 @@ export default function LeonidaApp() {
                   onClick={() => {
                     game.discardDraw();
                     game.draw(session.players);
+                    go("drawing");
                   }}
                 >
                   <RotateCcw /> <L> Sortear de novo</L>
@@ -477,10 +552,14 @@ export default function LeonidaApp() {
               </div>
             </Page>
           )}
+          {currentView === "drawing" && session?.status === "ORDER_READY" && (
+            <DrawTransition players={session.players} />
+          )}
           {currentView === "session" && active && session && (
             <SessionView
               session={session}
               game={game}
+              onHome={() => go("home")}
               onFinish={(sessionId) => {
                 setSelectedHistory(sessionId);
                 go("summary");
@@ -756,13 +835,43 @@ function Players({ game }: { game: Game }) {
     </div>
   );
 }
+function DrawTransition({ players }: { players: Player[] }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  useEffect(() => {
+    if (players.length < 2) return;
+    const timer = window.setInterval(
+      () => setActiveIndex((index) => (index + 1) % players.length),
+      90,
+    );
+    return () => window.clearInterval(timer);
+  }, [players.length]);
+  const player = players[activeIndex];
+  return (
+    <main className="draw-transition" role="status" aria-live="polite">
+      <span className="eyebrow">
+        <L>SORTEIO / 02</L>
+      </span>
+      <div className="draw-reel">
+        <Avatar player={player ?? players[0]!} size="large" />
+      </div>
+      <h1>
+        <L>SORTEANDO A ORDEM</L>
+      </h1>
+      <strong>{player?.name}</strong>
+      <span className="loading-spinner" aria-hidden="true" />
+    </main>
+  );
+}
+
 function SessionView({
   session,
   game,
+  onHome,
   onFinish,
 }: {
   session: Session;
   game: Game;
+  onHome: () => void;
   onFinish: (sessionId: string) => void;
 }) {
   const player = session.players[session.index],
@@ -776,10 +885,6 @@ function SessionView({
       <div className="session-top">
         <span className="eyebrow">
           <span className="eyebrow-line" /> <L> SESSÃO EM ANDAMENTO</L>
-        </span>
-        <span className="session-live">
-          <span />
-          <L>{paused ? "PAUSADA" : "AO VIVO"}</L>
         </span>
       </div>
       <div className="session-stage">
@@ -837,26 +942,46 @@ function SessionView({
             <ArrowRight />
           </Button>
         </Confirm>
+        <Button variant="ghost" className="end-button" onClick={onHome}>
+          <L>Suspender e voltar ao início</L>
+          <ArrowLeft />
+        </Button>
       </div>
       <div className="order-strip">
         <span>
-          <L>ORDEM DA NOITE</L>
+          <L>ORDEM DA JOGATINA</L>
         </span>
         <div>
           {session.players.map((p, i) => (
-            <span key={p.id} className={i === session.index ? "order-active" : ""}>
-              {String(i + 1).padStart(2, "0")} {p.name}
+            <span className="order-item" key={p.id}>
+              <span className={i === session.index ? "order-active" : ""}>{p.name}</span>
+              {i < session.players.length - 1 && <ArrowRight aria-hidden="true" />}
             </span>
           ))}
         </div>
       </div>
       {game.signal && (
-        <div className="turn-alert" role="status">
-          {game.signal === "timeout" ? "TEMPO!" : "NOVA VEZ"}{" "}
-          <span>
-            <L>Agora é a vez de </L>
-            {player.name}
-          </span>
+        <div
+          className={`turn-alert ${game.signal === "death" ? "turn-alert-death" : ""}`}
+          role="status"
+        >
+          <strong>
+            {game.signal === "death" ? (
+              <L>SE FUDEU</L>
+            ) : game.signal === "timeout" ? (
+              <L>TEMPO!</L>
+            ) : game.signal === "pause" ? (
+              <L>JOGATINA PAUSADA</L>
+            ) : (
+              <L>VOLTANDO AO JOGO</L>
+            )}
+          </strong>
+          {(game.signal === "death" || game.signal === "timeout") && (
+            <span>
+              <L>Agora é a vez de </L>
+              {player.name}
+            </span>
+          )}
         </div>
       )}
     </main>

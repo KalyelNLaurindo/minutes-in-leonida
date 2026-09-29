@@ -2,9 +2,18 @@
 export const DEFAULT_TURN_MINUTES = 20;
 export const MIN_TURN_MINUTES = 1;
 export const MAX_TURN_MINUTES = 180;
+export const MIN_SESSION_PLAYERS = 2;
+export const MAX_PLAYERS = 10;
 export const TURN_DURATION_MS = DEFAULT_TURN_MINUTES * 60_000;
 
-export type Player = { id: string; name: string; color: number };
+export type PlayerIcon = "revolver" | "vest" | "money" | "car" | "star";
+export type Player = {
+  id: string;
+  name: string;
+  color: number;
+  customColor?: string;
+  icon?: PlayerIcon;
+};
 export type Reason = "DEATH" | "TIMEOUT" | "SESSION_ENDED";
 export type Turn = {
   id: string;
@@ -20,7 +29,7 @@ export type Turn = {
 export type Session = {
   id: string;
   players: Player[];
-  status: "ORDER_READY" | "ACTIVE" | "PAUSED" | "ENDED";
+  status: "ORDER_READY" | "ACTIVE" | "PAUSED" | "SUSPENDED" | "ENDED";
   index: number;
   createdAt: number;
   turnDurationMs: number;
@@ -99,12 +108,12 @@ export function createSession(
   random?: (max: number) => number,
 ): Session {
   if (
-    players.length < 2 ||
-    players.length > 4 ||
+    players.length < MIN_SESSION_PLAYERS ||
+    players.length > MAX_PLAYERS ||
     new Set(players.map((player) => player.name.trim().toLocaleLowerCase("pt-BR"))).size !==
       players.length
   ) {
-    throw new Error("Selecione de 2 a 4 jogadores com nomes diferentes.");
+    throw new Error(`Selecione de 2 a ${MAX_PLAYERS} jogadores com nomes diferentes.`);
   }
   return {
     id: uid(),
@@ -174,13 +183,22 @@ export function pause(session: Session, now: number): Session {
 }
 
 export function resume(session: Session, now: number): Session {
-  if (session.status !== "PAUSED") throw new Error("Sessão não está pausada.");
+  if (session.status !== "PAUSED" && session.status !== "SUSPENDED")
+    throw new Error("Sessão não está pausada.");
   const turns = [...session.turns];
   const last = turns.length - 1;
   const turn = turns[last];
   if (!turn) throw new Error("Turno indisponível.");
   turns[last] = { ...turn, segmentStartedAt: now };
   return { ...session, status: "ACTIVE", turns };
+}
+
+/** Freeze the active turn and mark the session for later continuation from Home. */
+export function suspend(session: Session, now: number): Session {
+  const paused = session.status === "ACTIVE" ? pause(session, now) : session;
+  if (paused.status !== "PAUSED" && paused.status !== "SUSPENDED")
+    throw new Error("Somente uma sessão iniciada pode ser suspensa.");
+  return { ...paused, status: "SUSPENDED" };
 }
 
 export function advance(
@@ -228,7 +246,7 @@ export function advance(
 }
 
 export function end(session: Session, now: number): Session {
-  if (session.status !== "ACTIVE" && session.status !== "PAUSED")
+  if (session.status !== "ACTIVE" && session.status !== "PAUSED" && session.status !== "SUSPENDED")
     throw new Error("Sessão não iniciada.");
   const turns = closeCurrentTurn(session, now);
   const last = turns.length - 1;
