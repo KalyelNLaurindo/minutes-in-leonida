@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { translate } from "./i18n";
+import { detectBrowserLocale } from "../domain/locale";
 
 describe("locales", () => {
+  it("detects supported browser and device language preferences", () => {
+    expect(detectBrowserLocale(["fr-CA", "es-MX", "en-US"])).toBe("es");
+    expect(detectBrowserLocale(["en-GB"])).toBe("en");
+    expect(detectBrowserLocale(["pt-BR"])).toBe("pt");
+    expect(detectBrowserLocale(["fr-FR", "de-DE"])).toBe("pt");
+  });
+
   it("provides the home action and steps in English and Spanish", () => {
     expect(translate("en", "MONTAR SESSÃO")).toBe("START A SESSION");
     expect(translate("es", "MONTAR SESSÃO")).toBe("ARMAR LA SESIÓN");

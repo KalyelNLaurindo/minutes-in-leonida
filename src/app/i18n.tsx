@@ -1,6 +1,7 @@
 import { createContext, useContext, type ReactNode } from "react";
+import { type Locale } from "../domain/locale";
 
-export type Locale = "pt" | "en" | "es";
+export type { Locale } from "../domain/locale";
 
 const dictionaries: Record<Locale, Record<string, string>> = {
   pt: {},

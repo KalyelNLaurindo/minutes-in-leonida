@@ -50,6 +50,7 @@ import {
   saveCustomAlarmSound,
 } from "../domain/alarm-sound";
 import { buildSessionReport } from "../domain/report";
+import { detectBrowserLocale } from "../domain/locale";
 import scenery from "../assets/leonida-night.jpg";
 import { L, LocaleContext, translate, type Locale } from "./i18n";
 
@@ -225,7 +226,7 @@ function Header({
 export default function LeonidaApp() {
   const game = useGame();
   const { data, ready } = game;
-  const locale = data.settings.locale ?? "pt";
+  const locale = data.settings.locale ?? detectBrowserLocale();
   const [view, setView] = useState<View>("home");
   const [selected, setSelected] = useState<string[]>([]);
   const [selectedHistory, setSelectedHistory] = useState<string | null>(null);
@@ -745,7 +746,7 @@ function Empty({ icon, title, body }: { icon: React.ReactNode; title: string; bo
   );
 }
 function Players({ game }: { game: Game }) {
-  const locale = game.data.settings.locale ?? "pt";
+  const locale = game.data.settings.locale ?? detectBrowserLocale();
   const [name, setName] = useState("");
   const [color, setColor] = useState(0);
   const [editing, setEditing] = useState<string | null>(null);
@@ -913,6 +914,7 @@ function SessionView({
   onHome: () => void;
   onFinish: (sessionId: string) => void;
 }) {
+  const locale = game.data.settings.locale ?? detectBrowserLocale();
   const player = session.players[session.index],
     next = session.players[(session.index + 1) % session.players.length];
   const left = remaining(session, game.now);
@@ -936,7 +938,7 @@ function SessionView({
         <div
           className="timer"
           role="timer"
-          aria-label={`${translate(game.data.settings.locale ?? "pt", "Tempo restante")}: ${clockText(left)}`}
+          aria-label={`${translate(locale, "Tempo restante")}: ${clockText(left)}`}
         >
           {clockText(left)}
         </div>
@@ -1152,7 +1154,7 @@ function Summary({
 }
 function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
   const settings = game.data.settings;
-  const locale = settings.locale ?? "pt";
+  const locale = settings.locale ?? detectBrowserLocale();
   const supported = typeof window !== "undefined" && "Notification" in window;
   const [permission, setPermission] = useState(supported ? Notification.permission : "unavailable");
   const [minutesDraft, setMinutesDraft] = useState(String(settings.selectedTurnMinutes));

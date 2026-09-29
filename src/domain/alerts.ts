@@ -1,4 +1,5 @@
 import type { Settings } from "./game";
+import { detectBrowserLocale } from "./locale";
 import { playCustomAlarmSound } from "./alarm-sound";
 let context: AudioContext | undefined;
 export function primeAudio() {
@@ -54,7 +55,7 @@ export function alarm(
     }
   try {
     if ("Notification" in window && Notification.permission === "granted") {
-      const locale = settings.locale ?? "pt";
+      const locale = settings.locale ?? detectBrowserLocale();
       const message =
         locale === "en"
           ? `It’s ${nextName}’s turn.`

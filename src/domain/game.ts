@@ -59,7 +59,6 @@ export const defaults: AppData = {
   session: null,
   history: [],
   settings: {
-    locale: "pt",
     alarm: true,
     alarmSound: "builtin",
     volume: 0.7,
