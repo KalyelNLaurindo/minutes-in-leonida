@@ -1,6 +1,7 @@
 import type { Settings } from "./game";
 import { detectBrowserLocale } from "./locale";
 import { playCustomAlarmSound } from "./alarm-sound";
+import turnAlarmUrl from "../assets/turn-alarm.webm";
 let context: AudioContext | undefined;
 export function primeAudio() {
   try {
@@ -36,10 +37,22 @@ function playBuiltinTone(volume: number) {
   }
 }
 
-function playConfiguredSound(volume: number, sound: Settings["alarmSound"]) {
-  if (sound !== "custom" || !playCustomAlarmSound(volume, () => playBuiltinTone(volume))) {
-    playBuiltinTone(volume);
+/** Play the included five-second music clip, falling back to a short generated tone. */
+function playBundledAlarm(volume: number): boolean {
+  if (typeof Audio === "undefined") return false;
+  try {
+    const player = new Audio(turnAlarmUrl);
+    player.volume = Math.min(1, Math.max(0, volume));
+    void player.play().catch(() => playBuiltinTone(volume));
+    return true;
+  } catch {
+    return false;
   }
+}
+
+function playConfiguredSound(volume: number, sound: Settings["alarmSound"]) {
+  if (sound === "custom" && playCustomAlarmSound(volume, () => playBundledAlarm(volume))) return;
+  if (!playBundledAlarm(volume)) playBuiltinTone(volume);
 }
 
 export function alarm(
