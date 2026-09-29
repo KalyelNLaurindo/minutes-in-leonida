@@ -52,6 +52,30 @@ describe("game rules", () => {
       expect(s.turns.length).toBe(n + 1);
     }
   });
+  it("keeps the turn sequence and per-player counters consistent for ten players", () => {
+    const roster = Array.from({ length: 10 }, (_, index) => ({
+      id: `player-${index}`,
+      name: `Player ${index}`,
+      color: index % 4,
+    }));
+    let session = start(
+      createSession(roster, 0, 1, () => 0),
+      100,
+    );
+
+    for (let turn = 0; turn < 10; turn += 1) {
+      session = advance(session, "DEATH", 200 + turn);
+    }
+
+    expect(session.index).toBe(0);
+    expect(session.turns.map((turn) => turn.sequence)).toEqual(
+      Array.from({ length: 11 }, (_, index) => index + 1),
+    );
+    const completed = end(session, 300);
+    const totals = stats(completed);
+    expect(totals.reduce((sum, player) => sum + player.turns, 0)).toBe(11);
+    expect(totals.reduce((sum, player) => sum + player.deaths, 0)).toBe(10);
+  });
   it("records death duration and starts the next turn immediately", () => {
     const s = start(ordered(2), 100);
     const next = advance(s, "DEATH", 5100);

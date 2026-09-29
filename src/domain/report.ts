@@ -43,7 +43,8 @@ export function buildSessionReport(session: Session, locale: Locale = "pt"): str
     pt: {
       date: "Data e hora",
       started: "Início",
-      duration: "Duração",
+      duration: "Tempo decorrido",
+      inactive: "Tempo pausado / inativo",
       turnLength: "Tempo por turno",
       players: "Jogadores",
       turns: "Turnos",
@@ -73,12 +74,14 @@ export function buildSessionReport(session: Session, locale: Locale = "pt"): str
       rank: "Pos.",
       timeShort: "Tempo",
       avg: "Média por turno",
+      playerRhythm: "RITMO POR JOGADOR",
       launch: "SESSÃO ENCERRADA",
     },
     en: {
       date: "Date and time",
       started: "Started",
-      duration: "Duration",
+      duration: "Elapsed time",
+      inactive: "Paused / idle",
       turnLength: "Turn limit",
       players: "Players",
       turns: "Turns",
@@ -108,12 +111,14 @@ export function buildSessionReport(session: Session, locale: Locale = "pt"): str
       rank: "Rank",
       timeShort: "Time",
       avg: "Average turn",
+      playerRhythm: "PLAYER PACE",
       launch: "SESSION CLOSED",
     },
     es: {
       date: "Fecha y hora",
       started: "Inicio",
-      duration: "Duración",
+      duration: "Tiempo transcurrido",
+      inactive: "Tiempo en pausa / inactivo",
       turnLength: "Límite del turno",
       players: "Jugadores",
       turns: "Turnos",
@@ -143,6 +148,7 @@ export function buildSessionReport(session: Session, locale: Locale = "pt"): str
       rank: "Puesto",
       timeShort: "Tiempo",
       avg: "Promedio por turno",
+      playerRhythm: "RITMO POR JUGADOR",
       launch: "SESIÓN CERRADA",
     },
   }[locale];
@@ -171,6 +177,7 @@ export function buildSessionReport(session: Session, locale: Locale = "pt"): str
   const endedAt = session.endedAt ?? session.turns.at(-1)?.endedAt ?? startedAt;
   const totalDuration = Math.max(0, endedAt - startedAt);
   const totalPlayed = records.reduce((total, record) => total + record.totalMs, 0);
+  const inactiveDuration = Math.max(0, totalDuration - totalPlayed);
   const deathCount = records.reduce((total, record) => total + record.deaths, 0);
   const timeoutCount = records.reduce((total, record) => total + record.timeouts, 0);
   const leader = records[0];
@@ -204,9 +211,9 @@ export function buildSessionReport(session: Session, locale: Locale = "pt"): str
     "",
     `## 🎮 ${text.summary}`,
     "",
-    `| 🗂️ ${text.date} | ⏱️ ${text.duration} | 🎛️ ${text.turnLength} | 👥 ${text.players} | 🔁 ${text.turns} |`,
-    "| :--- | ---: | ---: | ---: | ---: |",
-    `| ${dateTime(endedAt)} | ${formatDuration(totalDuration)} | ${Math.round(session.turnDurationMs / 60_000)} min | ${session.players.length} | ${session.turns.length} |`,
+    `| 🗂️ ${text.date} | ⏱️ ${text.duration} | 🎛️ ${text.turnLength} | 👥 ${text.players} | 🔁 ${text.turns} | ⏸️ ${text.inactive} |`,
+    "| :--- | ---: | ---: | ---: | ---: | ---: |",
+    `| ${dateTime(endedAt)} | ${formatDuration(totalDuration)} | ${Math.round(session.turnDurationMs / 60_000)} min | ${session.players.length} | ${session.turns.length} | ${formatDuration(inactiveDuration)} |`,
     "",
     `| 🟢 ${text.started} | 💀 ${text.deaths} | ⏰ ${text.timeouts} | 🕹️ ${text.played} |`,
     "| :--- | ---: | ---: | ---: |",
@@ -214,14 +221,21 @@ export function buildSessionReport(session: Session, locale: Locale = "pt"): str
     "",
     `## 🏆 ${text.ranking}`,
     "",
-    `| ${text.rank} | ${text.player} | ${text.time} | ${text.share} | ${text.avg} | ${text.longest} | ${text.turns} | ${text.deaths} | ${text.timeouts} |`,
-    "| ---: | :--- | ---: | :--- | ---: | ---: | ---: | ---: | ---: |",
+    `| ${text.rank} | ${text.player} | ${text.time} | ${text.share} | ${text.turns} | 💀 ${text.deaths} | ⏱️ ${text.timeouts} |`,
+    "| ---: | :--- | ---: | :--- | ---: | ---: | ---: |",
     ...records.map((record, index) => {
       const marker = index === 0 && record.totalMs > 0 ? " 🏆" : "";
-      return `| ${ordinal(index)} | ${escapeTableCell(record.player.name)}${marker} | ${formatDuration(record.totalMs)} | ${progressBar(record.totalMs, totalPlayed)} | ${formatDuration(record.averageMs)} | ${formatDuration(record.longestMs)} | ${record.turns} | ${record.deaths} | ${record.timeouts} |`;
+      return `| ${ordinal(index)} | ${escapeTableCell(record.player.name)}${marker} | ${formatDuration(record.totalMs)} | ${progressBar(record.totalMs, totalPlayed)} | ${record.turns} | ${record.deaths} | ${record.timeouts} |`;
     }),
     "",
     `_${text.progress}_`,
+    "",
+    `### 📊 ${text.playerRhythm}`,
+    "",
+    ...records.map(
+      (record) =>
+        `- **${escapeTableCell(record.player.name)}** — ${text.avg}: ${formatDuration(record.averageMs)} · ${text.longest}: ${formatDuration(record.longestMs)}`,
+    ),
     "",
     `## 🧭 ${text.timeline}`,
     "",

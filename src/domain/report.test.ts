@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { advance, createSession, end, start, type Player } from "./game";
+import { advance, createSession, end, pause, resume, start, type Player } from "./game";
 import { buildSessionReport, buildSessionReportFilename } from "./report";
 
 const players: Player[] = [
@@ -30,6 +30,8 @@ describe("session report", () => {
     expect(report).toContain("| 2º | Beto");
     expect(report).toContain("Morte");
     expect(report).toContain("Sessão encerrada");
+    expect(report).toContain("Tempo pausado / inativo");
+    expect(report).toContain("RITMO POR JOGADOR");
   });
 
   it("escapes Markdown table separators in player names", () => {
@@ -43,6 +45,19 @@ describe("session report", () => {
     );
 
     expect(buildSessionReport(completed)).toContain("Ana \\| Noite");
+  });
+
+  it("keeps elapsed time separate from actual turn time when the session is paused", () => {
+    const session = start(
+      createSession(players, 0, 5, () => 0),
+      1_000,
+    );
+    const paused = pause(session, 6_000);
+    const resumed = resume(paused, 16_000);
+    const completed = end(resumed, 21_000);
+    const report = buildSessionReport(completed);
+
+    expect(report).toContain("| 0min 20s | 5 min | 2 | 1 | 0min 10s |");
   });
 
   it("exports the selected language for English and Spanish", () => {
