@@ -960,6 +960,22 @@ function SessionView({
         <div className="timer-track">
           <span style={{ width: `${(left / session.turnDurationMs) * 100}%` }} />
         </div>
+        <div className="session-primary-controls">
+          {paused ? (
+            <Button className="death-button resume-button" onClick={game.togglePause}>
+              <Play /> <L> RETOMAR</L>
+            </Button>
+          ) : (
+            <>
+              <Button className="death-button" onClick={game.die}>
+                <Skull /> <L> MORREU</L>
+              </Button>
+              <Button className="pause-button" onClick={game.togglePause}>
+                <Pause /> <L> PAUSAR</L>
+              </Button>
+            </>
+          )}
+        </div>
         <div className="next-up">
           <span>
             <L>PRÓXIMO NA FILA</L>
@@ -971,20 +987,6 @@ function SessionView({
         </div>
       </div>
       <div className="session-controls">
-        {paused ? (
-          <Button className="death-button resume-button" onClick={game.togglePause}>
-            <Play /> <L> RETOMAR</L>
-          </Button>
-        ) : (
-          <>
-            <Button className="death-button" onClick={game.die}>
-              <Skull /> <L> MORREU</L>
-            </Button>
-            <Button className="pause-button" onClick={game.togglePause}>
-              <Pause /> <L> PAUSAR</L>
-            </Button>
-          </>
-        )}
         <Confirm
           title="Encerrar sessão?"
           description="O turno atual será registrado e a sessão ficará salva no histórico."
