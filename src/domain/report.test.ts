@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { advance, createSession, end, start, type Player } from "./game";
-import { buildSessionReport } from "./report";
+import { buildSessionReport, buildSessionReportFilename } from "./report";
 
 const players: Player[] = [
   { id: "a", name: "Ana", color: 0 },
@@ -22,9 +22,9 @@ describe("session report", () => {
     const report = buildSessionReport(completed);
 
     expect(report).toContain("# Placar final — Minutes in Leonida");
-    expect(report).toContain(
-      "| Posição | Jogador | Tempo em jogo | Turnos | Mortes | Tempos esgotados |",
-    );
+    expect(report).toContain("| Pos. | Jogador | Tempo no controle | Fatia do tempo |");
+    expect(report).toContain("MINUTES IN LEONIDA  //  SESSION SCORECARD");
+    expect(report).toContain("[#");
     expect(report.indexOf(secondPlayer.name)).toBeLessThan(report.indexOf(firstPlayer.name));
     expect(report).toContain("| 1º | Ana");
     expect(report).toContain("| 2º | Beto");
@@ -56,5 +56,20 @@ describe("session report", () => {
 
     expect(buildSessionReport(completed, "en")).toContain("# Final score");
     expect(buildSessionReport(completed, "es")).toContain("# Marcador final");
+  });
+
+  it("creates a readable, unique Markdown filename using the date and players", () => {
+    const completed = end(
+      start(
+        createSession([{ ...players[0]!, name: "Ana Noite" }, players[1]!], 0, 5, () => 0),
+        1_000,
+      ),
+      2_000,
+    );
+
+    const filename = buildSessionReportFilename(completed);
+    expect(filename).toMatch(/^minutes-in-leonida-placar-\d{8}-.*-1-turnos-[a-f0-9]{8}\.md$/);
+    expect(buildSessionReportFilename(completed, "en")).toMatch(/-score-.*-1-turns-/);
+    expect(buildSessionReportFilename(completed, "es")).toContain("-marcador-");
   });
 });

@@ -51,7 +51,7 @@ import {
   loadCustomAlarmSound,
   saveCustomAlarmSound,
 } from "../domain/alarm-sound";
-import { buildSessionReport } from "../domain/report";
+import { buildSessionReport, buildSessionReportFilename } from "../domain/report";
 import { detectBrowserLocale } from "../domain/locale";
 import scenery from "../assets/leonida-night.jpg";
 import { L, LocaleContext, translate, type Locale } from "./i18n";
@@ -242,9 +242,8 @@ export default function LeonidaApp() {
       });
       url = URL.createObjectURL(report);
       const link = document.createElement("a");
-      const date = new Date(session.endedAt ?? Date.now()).toISOString().slice(0, 10);
       link.href = url;
-      link.download = `minutes-in-leonida-score-${date}.md`;
+      link.download = buildSessionReportFilename(session, locale);
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(url!), 1000);
       setActionError("");
