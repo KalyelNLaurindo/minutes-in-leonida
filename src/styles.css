@@ -171,8 +171,8 @@ button { cursor: pointer; }
 .eyebrow-line { width: 25px; height: 2px; background: currentColor; display: inline-block; }
 h1, h2, h3, p { margin-top: 0; }
 .home-copy h1, .page-heading h1, .current-player { font-family: 'Barlow Condensed', Impact, sans-serif; font-weight: 800; letter-spacing: 0; text-transform: uppercase; }
-.home-copy h1 { font-size: clamp(76px, 11vw, 174px); line-height: .78; margin: 34px 0 28px; text-shadow: 0 8px 35px var(--background); }
-.home-copy h1 span { color: var(--primary); }
+.home-copy .home-poster-heading { width: 100%; margin: 0 auto 28px; font-size: 0; line-height: 0; text-shadow: none; }
+.home-poster { display: block; width: min(60%, 540px); height: auto; margin-inline: auto; border-radius: 16px; }
 .home-copy p, .page-heading p { color: var(--foreground); font-size: 17px; margin-bottom: 30px; }
 .primary-cta { min-height: 58px; padding: 0 28px; border-radius: 4px; background: var(--primary); color: var(--primary-foreground); font-family: 'Barlow Condensed'; font-size: 20px; font-weight: 800; letter-spacing: 0.05em; justify-content: space-between; gap: 38px; box-shadow: 0 8px 32px oklch(0.15 0.02 300 / 30%); }
 .primary-cta:hover, .form-submit:hover { background: var(--coral); }
@@ -320,7 +320,6 @@ h1, h2, h3, p { margin-top: 0; }
  .site-footer span:last-child { display: none; }
  .home-view { display: flex; flex-direction: column; justify-content: space-between; min-height: calc(100svh - 120px); padding: 76px 24px 22px; }
  .home-copy { width: 100%; max-width: none; align-self: stretch; margin: 0; text-align: left; }
- .home-copy h1 { font-size: clamp(72px, 19vw, 112px); line-height: .82; margin: 26px 0; }
  .home-copy p { font-size: 15px; line-height: 1.5; max-width: 290px; }
  .home-copy p { margin-left: 0; margin-right: 0; }
  .home-steps { justify-content: flex-start; gap: 8px 10px; margin-top: 22px; font-size: 10px; }
@@ -359,5 +358,5 @@ h1, h2, h3, p { margin-top: 0; }
  .preset-editor { padding-left: 0; }
  .setting-row select { max-width: 105px; }
 }
-@media (max-width: 390px) { .home-copy h1 { font-size: 18vw; } .session-view { padding-inline: 15px; } .timer { font-size: 32vw; } .current-player { font-size: 17vw; } }
+@media (max-width: 390px) { .session-view { padding-inline: 15px; } .timer { font-size: 32vw; } .current-player { font-size: 17vw; } }
 @media (prefers-reduced-motion: reduce) { *, *:before, *:after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }

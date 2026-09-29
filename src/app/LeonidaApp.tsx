@@ -200,13 +200,12 @@ export default function LeonidaApp() {
         {currentView === "home" && (
           <main className="home-view">
             <div className="home-copy">
-              <span className="eyebrow">
-                <span className="eyebrow-line" /> SEU TEMPO. SUA VEZ.
-              </span>
-              <h1>
-                MINUTES
-                <br />
-                <span>IN LEONIDA</span>
+              <h1 className="home-poster-heading">
+                <img
+                  className="home-poster"
+                  src="/brand/minutes-in-leonida-poster.jpg"
+                  alt="Minutes in Leonida — Seu tempo, sua vez."
+                />
               </h1>
               <p>
                 A turma vai se aventurar pelas ruas da Cidade do Vício, mas só tem um controle?
