@@ -220,6 +220,7 @@ export default function LeonidaApp() {
   const [view, setView] = useState<View>("home");
   const [selected, setSelected] = useState<string[]>([]);
   const [selectedHistory, setSelectedHistory] = useState<string | null>(null);
+  const [summaryOrigin, setSummaryOrigin] = useState<"finished" | "history">("finished");
   const [actionError, setActionError] = useState("");
   const exportSessionReport = (session: Session) => {
     let url: string | undefined;
@@ -562,6 +563,7 @@ export default function LeonidaApp() {
               onHome={() => go("home")}
               onFinish={(sessionId) => {
                 setSelectedHistory(sessionId);
+                setSummaryOrigin("finished");
                 go("summary");
               }}
             />
@@ -575,38 +577,51 @@ export default function LeonidaApp() {
             >
               <div className="history-list">
                 {data.history.length ? (
-                  data.history.map((s, i) => (
-                    <Button
-                      key={s.id}
-                      variant="ghost"
-                      className="history-row"
-                      onClick={() => {
-                        setSelectedHistory(s.id);
-                        go("summary");
-                      }}
-                    >
-                      <span className="history-index">
-                        {String(data.history.length - i).padStart(2, "0")}
-                      </span>
-                      <span className="history-info">
-                        <strong>
-                          {new Date(s.startedAt ?? s.createdAt).toLocaleDateString(
-                            locale === "pt" ? "pt-BR" : locale === "es" ? "es-ES" : "en-US",
-                            {
-                              day: "2-digit",
-                              month: "long",
-                              year: "numeric",
-                            },
-                          )}
-                        </strong>
-                        <small>
-                          {s.players.map((p) => p.name).join(" · ")} <L> — </L>
-                          {s.turns.length} <L> turnos</L>
-                        </small>
-                      </span>
-                      <ArrowRight />
-                    </Button>
-                  ))
+                  data.history.map((s, i) => {
+                    const date = new Date(s.startedAt ?? s.createdAt).toLocaleDateString(
+                      locale === "pt" ? "pt-BR" : locale === "es" ? "es-ES" : "en-US",
+                      { day: "2-digit", month: "long", year: "numeric" },
+                    );
+                    return (
+                      <div className="history-entry" key={s.id}>
+                        <Button
+                          variant="ghost"
+                          className="history-row"
+                          onClick={() => {
+                            setSelectedHistory(s.id);
+                            setSummaryOrigin("history");
+                            go("summary");
+                          }}
+                        >
+                          <span className="history-index">
+                            {String(data.history.length - i).padStart(2, "0")}
+                          </span>
+                          <span className="history-info">
+                            <strong>{date}</strong>
+                            <small>
+                              {s.players.map((p) => p.name).join(" · ")} <L> — </L>
+                              {s.turns.length} <L> turnos</L>
+                            </small>
+                          </span>
+                          <ArrowRight />
+                        </Button>
+                        <Confirm
+                          title="Apagar sessão?"
+                          description="Esta partida será removida do histórico deste aparelho."
+                          action={() => game.deleteHistorySession(s.id)}
+                        >
+                          <Button
+                            variant="ghost"
+                            className="history-delete"
+                            aria-label={`${translate(locale, "Apagar sessão")} ${date}`}
+                            title={translate(locale, "Apagar sessão")}
+                          >
+                            <Trash2 />
+                          </Button>
+                        </Confirm>
+                      </div>
+                    );
+                  })
                 ) : (
                   <Empty
                     icon={<History />}
@@ -619,18 +634,33 @@ export default function LeonidaApp() {
           )}
           {currentView === "summary" && (
             <Page
-              title="FIM DE JOGO"
-              kicker="RESUMO DA SESSÃO"
-              description="Mais uma noite em Leonida."
+              title={summaryOrigin === "finished" ? "FIM DE JOGO" : "RESUMO DA JOGATINA"}
+              kicker={
+                summaryOrigin === "finished" ? "RESUMO DA SESSÃO" : "PLACAR FINAL / HISTÓRICO"
+              }
+              description={
+                summaryOrigin === "finished"
+                  ? "Mais uma noite em Leonida."
+                  : "Veja como foi cada turno e o placar da galera."
+              }
               back={() => go("history")}
             >
               <Summary
                 session={data.history.find((s) => s.id === selectedHistory) ?? data.history[0]}
                 onExport={exportSessionReport}
+                onDelete={(sessionId) => {
+                  game.deleteHistorySession(sessionId);
+                  setSelectedHistory(null);
+                  setSummaryOrigin("history");
+                  go("history");
+                }}
               />
               <div className="page-actions">
-                <Button className="primary-cta" onClick={() => go("home")}>
-                  <L>VOLTAR AO INÍCIO </L>
+                <Button
+                  className="primary-cta"
+                  onClick={() => go(summaryOrigin === "history" ? "history" : "home")}
+                >
+                  <L>{summaryOrigin === "history" ? "VOLTAR AO HISTÓRICO" : "VOLTAR AO INÍCIO"}</L>
                   <ArrowRight />
                 </Button>
               </div>
@@ -990,9 +1020,11 @@ function SessionView({
 function Summary({
   session,
   onExport,
+  onDelete,
 }: {
   session: Session | undefined;
   onExport: (session: Session) => void;
+  onDelete: (sessionId: string) => void;
 }) {
   if (!session)
     return (
@@ -1096,6 +1128,15 @@ function Summary({
         <Button variant="outline" onClick={() => onExport(session)}>
           <Download /> <L> Exportar placar (.md)</L>
         </Button>
+        <Confirm
+          title="Apagar sessão?"
+          description="Esta partida será removida do histórico deste aparelho."
+          action={() => onDelete(session.id)}
+        >
+          <Button variant="outline" className="delete-session-button">
+            <Trash2 /> <L>Apagar sessão</L>
+          </Button>
+        </Confirm>
       </div>
     </div>
   );

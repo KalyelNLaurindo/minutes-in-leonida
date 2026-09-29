@@ -285,7 +285,10 @@ h1, h2, h3, p { margin-top: 0; }
 @keyframes draw-reel { to { transform: translateY(-8px) rotate(5deg) scale(1.05); } }
 @keyframes draw-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes death-card { 0% { opacity: 0; transform: scale(1.12); } 12% { opacity: 1; transform: scale(1); } 82% { opacity: 1; } 100% { opacity: 0; } }
-.history-row { text-align: left; color: var(--foreground); min-height: 88px; padding: 0 10px; }
+.history-entry { display: flex; align-items: center; border-bottom: 1px solid var(--border); }
+.history-entry .history-row { flex: 1; width: auto; border-bottom: 0; text-align: left; color: var(--foreground); min-height: 88px; padding: 0 10px; }
+.history-delete { flex: 0 0 auto; width: 42px; height: 42px; color: var(--muted-foreground); }
+.history-delete:hover { color: var(--destructive); background: oklch(0.55 0.2 20 / 16%); }
 .history-index { color: var(--primary); font: 800 26px 'Barlow Condensed'; }
 .history-info { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: 4px; }
 .history-info strong, .history-info small { overflow: hidden; text-overflow: ellipsis; }

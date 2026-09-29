@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   advance,
   createSession,
+  defaults,
   end,
   pause,
   remaining,
   resume,
+  removeHistorySession,
   shuffle,
   start,
   suspend,
@@ -93,5 +95,14 @@ describe("game rules", () => {
     expect(getTurn(done.turns, 1).activeDurationMs).toBe(3000);
     expect(stats(done).reduce((n, r) => n + r.deaths, 0)).toBe(1);
     expect(stats(done).reduce((n, r) => n + r.totalMs, 0)).toBe(8000);
+  });
+  it("deletes only the selected session from the local history state", () => {
+    const first = ordered(2);
+    const second = ordered(3);
+    const data = { ...defaults, history: [first, second] };
+    const updated = removeHistorySession(data, first.id);
+
+    expect(updated.history.map((session) => session.id)).toEqual([second.id]);
+    expect(data.history).toHaveLength(2);
   });
 });

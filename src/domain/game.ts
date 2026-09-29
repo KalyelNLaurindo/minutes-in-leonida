@@ -288,6 +288,11 @@ export function stats(session: Session) {
   });
 }
 
+/** Remove one completed session while preserving the order of the remaining history. */
+export function removeHistorySession(data: AppData, sessionId: string): AppData {
+  return { ...data, history: data.history.filter((session) => session.id !== sessionId) };
+}
+
 export const clockText = (ms: number) => {
   const totalSeconds = Math.ceil(Math.max(0, ms) / 1000);
   return `${String(Math.floor(totalSeconds / 60)).padStart(2, "0")}:${String(totalSeconds % 60).padStart(2, "0")}`;

@@ -7,6 +7,7 @@ import {
   normalizeMinutes,
   MAX_PLAYERS,
   pause,
+  removeHistorySession,
   remaining,
   resume,
   start,
@@ -247,6 +248,9 @@ export function useGame() {
       return { ...current, session: null, history: [finished, ...current.history] };
     });
 
+  const deleteHistorySession = (sessionId: string) =>
+    mutate((current) => removeHistorySession(current, sessionId));
+
   const discardDraw = () => mutate((current) => ({ ...current, session: null }));
 
   const changeSettings = (partial: Partial<Settings>) =>
@@ -307,6 +311,7 @@ export function useGame() {
     togglePause,
     suspendSession,
     finish,
+    deleteHistorySession,
     discardDraw,
     changeSettings,
     resetData,
