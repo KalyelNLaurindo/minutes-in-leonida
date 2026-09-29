@@ -19,9 +19,23 @@ import {
   Clock3,
   Music2,
   Upload,
-  Tv,
+  Gamepad2,
+  Handshake,
+  Languages,
+  Shield,
+  Banknote,
+  CarFront,
+  Star,
+  Dices,
+  Flame,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +56,7 @@ import {
   remaining,
   stats,
   type Player,
+  type PlayerIcon,
   type Session,
 } from "../domain/game";
 import { testAlarm } from "../domain/alerts";
@@ -66,14 +81,98 @@ type View =
   | "history"
   | "settings"
   | "summary";
-const palettes = ["tone-pink", "tone-orange", "tone-blue", "tone-lime"];
+const palettes = [
+  "tone-pink",
+  "tone-orange",
+  "tone-blue",
+  "tone-lime",
+  "tone-violet",
+  "tone-red",
+  "tone-teal",
+  "tone-gold",
+  "tone-white",
+  "tone-gray",
+];
+const SHOW_VI_LOGO = false;
+const playerIcons: PlayerIcon[] = [
+  "revolver",
+  "lighter",
+  "broken-bottle",
+  "knife",
+  "vest",
+  "money",
+  "car",
+  "star",
+  "dice",
+  "flame",
+];
+const playerIconNames: Record<PlayerIcon, Record<Locale, string>> = {
+  revolver: { pt: "Pistola", en: "Pistol", es: "Pistola" },
+  lighter: { pt: "Isqueiro", en: "Lighter", es: "Encendedor" },
+  "broken-bottle": { pt: "Garrafa quebrada", en: "Broken bottle", es: "Botella rota" },
+  knife: { pt: "Faca", en: "Knife", es: "Cuchillo" },
+  vest: { pt: "Colete", en: "Vest", es: "Chaleco" },
+  money: { pt: "Dinheiro", en: "Cash", es: "Dinero" },
+  car: { pt: "Carro", en: "Car", es: "Coche" },
+  star: { pt: "Estrela", en: "Star", es: "Estrella" },
+  dice: { pt: "Dados", en: "Dice", es: "Dados" },
+  flame: { pt: "Chama", en: "Flame", es: "Llama" },
+};
+function PlayerIconGraphic({ icon }: { icon: PlayerIcon }) {
+  if (icon === "vest") return <Shield />;
+  if (icon === "money") return <Banknote />;
+  if (icon === "car") return <CarFront />;
+  if (icon === "star") return <Star />;
+  if (icon === "dice") return <Dices />;
+  if (icon === "flame") return <Flame />;
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {icon === "revolver" && (
+        <>
+          <path d="M3 8h11l2 2h5v4h-7l-2 3H9l1-3H7l-2 3H3l2-5-2-2z" />
+          <path d="M16 10V7h4" />
+        </>
+      )}
+      {icon === "lighter" && (
+        <>
+          <rect x="7" y="8" width="10" height="13" rx="2" />
+          <path d="M9 8V5h6v3m-3-3c0-2 2-2 2-4" />
+        </>
+      )}
+      {icon === "broken-bottle" && (
+        <>
+          <path d="M9 3h6v4l2 3v10a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V10l2-3z" />
+          <path d="M9 7h6m-4 5 2 2-2 2 2 2" />
+        </>
+      )}
+      {icon === "knife" && (
+        <>
+          <path d="m4 20 9-9m-6 12 4-4m-7-2 12-12c2-2 5-1 5-1s1 3-1 5L8 17z" />
+        </>
+      )}
+    </svg>
+  );
+}
 function Avatar({ player, size = "normal" }: { player: Player; size?: "normal" | "large" }) {
   return (
     <span
-      className={`avatar ${palettes[player.color % 4]} ${size === "large" ? "avatar-large" : ""}`}
+      className={`avatar ${palettes[player.color % palettes.length]} ${size === "large" ? "avatar-large" : ""}`}
+      style={player.customColor ? { backgroundColor: player.customColor } : undefined}
       aria-hidden="true"
     >
-      {player.name.slice(0, 1).toUpperCase()}
+      {player.icon ? (
+        <PlayerIconGraphic icon={player.icon} />
+      ) : (
+        player.name.slice(0, 1).toUpperCase()
+      )}
     </span>
   );
 }
@@ -130,22 +229,16 @@ function DrawBoxIcon() {
     </svg>
   );
 }
-function AimFigureIcon() {
-  return (
-    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <circle cx="13" cy="8" r="4" />
-      <path d="M13 12v14m0-10 9 5h7m-16 3-8 16m8-16 9 16m-9-20 13-4h7m-7-3h13v5H31m3-5v-2h5v2" />
-    </svg>
-  );
-}
 function Header({
   go,
   locale,
   setLocale,
+  showViLogo,
 }: {
   go: (v: View) => void;
   locale: Locale;
   setLocale: (locale: Locale) => void;
+  showViLogo: boolean;
 }) {
   return (
     <header className="site-header">
@@ -156,7 +249,13 @@ function Header({
         aria-label={translate(locale, "Início")}
       >
         <span className="brand-lockup">
-          <img className="brand-mark" src="/brand/vi-mark.png" alt="" />
+          {showViLogo && (
+            <img
+              className="brand-mark"
+              src={`${import.meta.env.BASE_URL}brand/vi-mark.png`}
+              alt=""
+            />
+          )}
           <Logo />
         </span>
       </Button>
@@ -203,24 +302,33 @@ function Header({
             <L>Ajustes</L>
           </span>
         </Button>
-        <label
-          className="language-switch"
-          title={locale === "pt" ? "Idioma" : locale === "en" ? "Language" : "Idioma"}
-        >
-          <span className="language-mark" aria-hidden="true">
-            <span>文</span>
-            <span>A</span>
-          </span>
-          <select
-            value={locale}
-            aria-label={locale === "pt" ? "Idioma" : locale === "en" ? "Language" : "Idioma"}
-            onChange={(event) => setLocale(event.target.value as Locale)}
-          >
-            <option value="pt">🇧🇷 PT</option>
-            <option value="en">🇺🇸 EN</option>
-            <option value="es">🇪🇸 ES</option>
-          </select>
-        </label>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="language-switch"
+              title={locale === "en" ? "Language" : "Idioma"}
+              aria-label={locale === "en" ? "Language" : "Idioma"}
+            >
+              <Languages aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="language-menu">
+            {(
+              [
+                ["pt", "🇧🇷", "Português"],
+                ["en", "🇺🇸", "English"],
+                ["es", "🇪🇸", "Español"],
+              ] as const
+            ).map(([value, flag, name]) => (
+              <DropdownMenuItem key={value} onSelect={() => setLocale(value)}>
+                <span aria-hidden="true">{flag}</span>
+                <span>{name}</span>
+                {locale === value && <Check aria-label="Selecionado" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </nav>
     </header>
   );
@@ -323,6 +431,7 @@ export default function LeonidaApp() {
             go={go}
             locale={locale}
             setLocale={(value) => game.changeSettings({ locale: value })}
+            showViLogo={SHOW_VI_LOGO}
           />
           {game.persistence.message && (
             <div
@@ -343,7 +452,7 @@ export default function LeonidaApp() {
                 <h1 className="home-poster-heading">
                   <img
                     className="home-poster"
-                    src="/brand/minutes-in-leonida-lettering.png"
+                    src={`${import.meta.env.BASE_URL}brand/minutes-in-leonida-lettering.png`}
                     alt={
                       locale === "pt"
                         ? "Minutes in Leonida — Seu tempo, sua vez."
@@ -377,14 +486,14 @@ export default function LeonidaApp() {
                   </div>
                   <ArrowRight aria-hidden="true" />
                   <div className="home-step">
-                    <AimFigureIcon />
+                    <Gamepad2 aria-hidden="true" />
                     <span>
                       <L>Jogar o turno</L>
                     </span>
                   </div>
                   <ArrowRight aria-hidden="true" />
                   <div className="home-step">
-                    <Tv aria-hidden="true" />
+                    <Handshake aria-hidden="true" />
                     <span>
                       <L>Passar o controle</L>
                     </span>
@@ -411,17 +520,29 @@ export default function LeonidaApp() {
                       <L>Retome de onde vocês pararam.</L>
                     </small>
                   </div>
-                  <Button variant="outline" onClick={continueSession}>
-                    <Play />
-                    <L>Retomar sessão</L>
-                  </Button>
+                  <div className="suspended-session-actions">
+                    <Button variant="outline" onClick={continueSession}>
+                      <Play />
+                      <L>Retomar sessão</L>
+                    </Button>
+                    {session.status === "SUSPENDED" && (
+                      <Confirm
+                        title="Apagar sessão?"
+                        description="A sessão suspensa será removida deste aparelho."
+                        action={game.discardDraw}
+                      >
+                        <Button
+                          variant="ghost"
+                          className="history-delete"
+                          aria-label={translate(locale, "Apagar sessão")}
+                        >
+                          <Trash2 />
+                        </Button>
+                      </Confirm>
+                    )}
+                  </div>
                 </section>
               )}
-              <div className="home-bottom">
-                <div className="home-edition">
-                  <L>01 / O TEMPO É REI</L>
-                </div>
-              </div>
             </main>
           )}
           {currentView === "players" && (
@@ -768,14 +889,17 @@ function Players({ game }: { game: Game }) {
   const locale = game.data.settings.locale ?? detectBrowserLocale();
   const [name, setName] = useState("");
   const [color, setColor] = useState(0);
+  const [icon, setIcon] = useState<PlayerIcon | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [error, setError] = useState("");
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      if (editing) game.editPlayer(editing, name, color);
-      else game.addPlayer(name, color);
+      if (editing) game.editPlayer(editing, name, color, icon);
+      else game.addPlayer(name, color, icon);
       setName("");
+      setColor(0);
+      setIcon(null);
       setEditing(null);
       setError("");
     } catch (e) {
@@ -815,6 +939,39 @@ function Players({ game }: { game: Game }) {
               />
             ))}
           </div>
+          <label>
+            <L>Escolha seu ícone</L>
+          </label>
+          <div className="player-icon-picker">
+            <Button
+              type="button"
+              variant="ghost"
+              className={`player-icon-choice ${icon === null ? "player-icon-active" : ""}`}
+              aria-label={
+                locale === "en" ? "Initial" : locale === "es" ? "Inicial" : "Letra do nome"
+              }
+              aria-pressed={icon === null}
+              onClick={() => setIcon(null)}
+            >
+              <span className="icon-initial">A</span>
+              <small>{locale === "en" ? "Initial" : locale === "es" ? "Inicial" : "Inicial"}</small>
+            </Button>
+            {playerIcons.map((choice) => (
+              <Button
+                type="button"
+                variant="ghost"
+                key={choice}
+                className={`player-icon-choice ${icon === choice ? "player-icon-active" : ""}`}
+                aria-label={playerIconNames[choice][locale]}
+                title={playerIconNames[choice][locale]}
+                aria-pressed={icon === choice}
+                onClick={() => setIcon(choice)}
+              >
+                <PlayerIconGraphic icon={choice} />
+                <small>{playerIconNames[choice][locale]}</small>
+              </Button>
+            ))}
+          </div>
           {error && (
             <p className="form-error" role="alert">
               <L>{error}</L>
@@ -832,6 +989,8 @@ function Players({ game }: { game: Game }) {
                 onClick={() => {
                   setEditing(null);
                   setName("");
+                  setColor(0);
+                  setIcon(null);
                   setError("");
                 }}
               >
@@ -862,6 +1021,7 @@ function Players({ game }: { game: Game }) {
                   setEditing(p.id);
                   setName(p.name);
                   setColor(p.color);
+                  setIcon(p.icon ?? null);
                   setError("");
                 }}
               >

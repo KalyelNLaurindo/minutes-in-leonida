@@ -30,6 +30,8 @@ const dictionaries: Record<Locale, Record<string, string>> = {
     "Apagar sessão?": "Delete session?",
     "Esta partida será removida do histórico deste aparelho.":
       "This game session will be removed from this device’s history.",
+    "A sessão suspensa será removida deste aparelho.":
+      "The suspended session will be removed from this device.",
     "Apagar sessão": "Delete session",
     "RESUMO DA JOGATINA": "GAME SESSION RECAP",
     "PLACAR FINAL / HISTÓRICO": "FINAL SCORE / HISTORY",
@@ -52,6 +54,7 @@ const dictionaries: Record<Locale, Record<string, string>> = {
     "FEITO COM CARINHO POR": "MADE WITH CARE BY",
     Nome: "Name",
     "Escolha sua cor": "Choose a color",
+    "Escolha seu ícone": "Choose an icon",
     "JOGADORES SALVOS": "SAVED PLAYERS",
     "SESSÃO EM ANDAMENTO": "SESSION IN PROGRESS",
     "PRÓXIMO NA FILA": "UP NEXT",
@@ -255,6 +258,8 @@ const dictionaries: Record<Locale, Record<string, string>> = {
     "Apagar sessão?": "¿Eliminar la sesión?",
     "Esta partida será removida do histórico deste aparelho.":
       "Esta partida se eliminará del historial de este dispositivo.",
+    "A sessão suspensa será removida deste aparelho.":
+      "La sesión suspendida se eliminará de este dispositivo.",
     "Apagar sessão": "Eliminar sesión",
     "RESUMO DA JOGATINA": "RESUMEN DE LA PARTIDA",
     "PLACAR FINAL / HISTÓRICO": "MARCADOR FINAL / HISTORIAL",
@@ -274,6 +279,7 @@ const dictionaries: Record<Locale, Record<string, string>> = {
     "FEITO COM CARINHO POR": "HECHO CON CARIÑO POR",
     Nome: "Nombre",
     "Escolha sua cor": "Elige tu color",
+    "Escolha seu ícone": "Elige tu icono",
     "JOGADORES SALVOS": "JUGADORES GUARDADOS",
     "SESSÃO EM ANDAMENTO": "SESIÓN EN CURSO",
     "PRÓXIMO NA FILA": "SIGUIENTE",

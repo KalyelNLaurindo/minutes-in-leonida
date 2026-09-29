@@ -100,8 +100,15 @@ export function useGame() {
       const session = current.session;
       if (session?.status !== "ACTIVE" || remaining(session, time) > 0) return;
 
-      const expiredTurn = session.turns.at(-1);
-      const next = advance(session, "TIMEOUT", time, expiredTurn?.id);
+      let next = session;
+      while (remaining(next, time) <= 0) {
+        const expiredTurn = next.turns.at(-1);
+        if (!expiredTurn) break;
+        const deadline = expiredTurn.segmentStartedAt + next.turnDurationMs - expiredTurn.elapsedMs;
+        const advanced = advance(next, "TIMEOUT", deadline, expiredTurn.id);
+        if (advanced === next) break;
+        next = advanced;
+      }
       if (next === session) return;
       update({ ...current, session: next });
       setSignal("timeout");
@@ -138,11 +145,11 @@ export function useGame() {
   };
 
   const validateColor = (color: number) => {
-    if (!Number.isInteger(color) || color < 0 || color > 3)
+    if (!Number.isInteger(color) || color < 0 || color > 9)
       throw new Error("Escolha uma das cores disponíveis.");
   };
 
-  const addPlayer = (name: string, color: number) => {
+  const addPlayer = (name: string, color: number, icon: PlayerIcon | null = null) => {
     if (dataRef.current.players.length >= MAX_PLAYERS)
       throw new Error(`A lista já tem o máximo de ${MAX_PLAYERS} jogadores.`);
     const trimmed = name.trim().replace(/\s+/g, " ");
@@ -157,11 +164,11 @@ export function useGame() {
     }
     mutate((current) => ({
       ...current,
-      players: [...current.players, { id: uid(), name: trimmed, color }],
+      players: [...current.players, { id: uid(), name: trimmed, color, ...(icon ? { icon } : {}) }],
     }));
   };
 
-  const editPlayer = (id: string, name: string, color: number) => {
+  const editPlayer = (id: string, name: string, color: number, icon: PlayerIcon | null = null) => {
     const trimmed = name.trim().replace(/\s+/g, " ");
     if (!trimmed || trimmed.length > 24) throw new Error("Use um nome de 1 a 24 caracteres.");
     validateColor(color);
@@ -179,7 +186,14 @@ export function useGame() {
     mutate((current) => ({
       ...current,
       players: current.players.map((player) =>
-        player.id === id ? { ...player, name: trimmed, color } : player,
+        player.id === id
+          ? (() => {
+              const updated = { ...player, name: trimmed, color };
+              if (icon) updated.icon = icon;
+              else delete updated.icon;
+              return updated;
+            })()
+          : player,
       ),
     }));
   };

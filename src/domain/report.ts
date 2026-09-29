@@ -154,18 +154,22 @@ export function buildSessionReport(session: Session, locale: Locale = "pt"): str
   }[locale];
   const localeTag = locale === "pt" ? "pt-BR" : locale === "es" ? "es-ES" : "en-US";
   const formatDuration = (milliseconds: number) => {
-    const seconds = Math.floor(Math.max(0, milliseconds) / 1_000);
+    const safeMilliseconds = Math.max(0, Math.floor(milliseconds));
+    const seconds = Math.floor(safeMilliseconds / 1_000);
     const hours = Math.floor(seconds / 3_600);
     const minutes = Math.floor((seconds % 3_600) / 60);
     const remainder = String(seconds % 60).padStart(2, "0");
-    if (locale === "en") return `${hours ? `${hours}h ` : ""}${minutes}m ${remainder}s`;
-    if (locale === "es") return `${hours ? `${hours} h ` : ""}${minutes} min ${remainder} s`;
-    return `${hours ? `${hours}h ` : ""}${minutes}min ${remainder}s`;
+    const millis = String(safeMilliseconds % 1_000).padStart(3, "0");
+    if (locale === "en") return `${hours ? `${hours}h ` : ""}${minutes}m ${remainder}.${millis}s`;
+    if (locale === "es")
+      return `${hours ? `${hours} h ` : ""}${minutes} min ${remainder},${millis} s`;
+    return `${hours ? `${hours}h ` : ""}${minutes}min ${remainder},${millis}s`;
   };
   const progressBar = (value: number, total: number, width = 12) => {
     const ratio = total > 0 ? Math.min(1, Math.max(0, value / total)) : 0;
     const filled = Math.round(ratio * width);
-    return `\`[${"#".repeat(filled)}${"-".repeat(width - filled)}] ${Math.round(ratio * 100)}%\``;
+    const percent = total > 0 ? ((value / total) * 100).toFixed(1) : "0.0";
+    return `\`[${"#".repeat(filled)}${"-".repeat(width - filled)}] ${percent}%\``;
   };
   const records = stats(session).sort(
     (first, second) =>
@@ -224,7 +228,7 @@ export function buildSessionReport(session: Session, locale: Locale = "pt"): str
     `| ${text.rank} | ${text.player} | ${text.time} | ${text.share} | ${text.turns} | 💀 ${text.deaths} | ⏱️ ${text.timeouts} |`,
     "| ---: | :--- | ---: | :--- | ---: | ---: | ---: |",
     ...records.map((record, index) => {
-      const marker = index === 0 && record.totalMs > 0 ? " 🏆" : "";
+      const marker = record.totalMs > 0 ? ([" 🥇", " 🥈", " 🥉"][index] ?? "") : "";
       return `| ${ordinal(index)} | ${escapeTableCell(record.player.name)}${marker} | ${formatDuration(record.totalMs)} | ${progressBar(record.totalMs, totalPlayed)} | ${record.turns} | ${record.deaths} | ${record.timeouts} |`;
     }),
     "",

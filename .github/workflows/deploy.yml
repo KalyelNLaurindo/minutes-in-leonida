@@ -1,0 +1,61 @@
+name: Publicar no GitHub Pages
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Definir endereço público
+        shell: bash
+        run: |
+          repository="${GITHUB_REPOSITORY#*/}"
+          if [[ "${repository,,}" == "${GITHUB_REPOSITORY_OWNER,,}.github.io" ]]; then
+            published_url="https://${GITHUB_REPOSITORY_OWNER}.github.io/"
+          else
+            published_url="https://${GITHUB_REPOSITORY_OWNER}.github.io/${repository}/"
+          fi
+          echo "VITE_PUBLISHED_URL=${published_url}" >> "$GITHUB_ENV"
+      - name: Instalar dependências
+        run: npm ci
+      - name: Gerar build estático
+        run: npm run build
+      - name: Preparar entrada e fallback SPA
+        run: |
+          node --input-type=module -e 'import { copyFileSync, existsSync } from "node:fs"; const shell = ".output/public/_shell.html"; if (!existsSync(shell)) throw new Error(`Shell estático não encontrado: ${shell}`); copyFileSync(shell, ".output/public/index.html"); copyFileSync(shell, ".output/public/404.html");'
+      - name: Enviar artefato
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .output/public
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Publicar no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

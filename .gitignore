@@ -16,6 +16,13 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Optional personal mark; it remains available in the local copy.
+/public/brand/vi-mark.png
 
 # Wrangler / Cloudflare
 .wrangler/

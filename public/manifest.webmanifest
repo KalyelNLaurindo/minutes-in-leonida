@@ -1,11 +1,11 @@
 {
-  "id": "/",
+  "id": "./",
   "name": "Minutes in Leonida",
   "short_name": "Leonida",
   "description": "Sorteie a ordem e controle os turnos da sua sessão de jogo.",
   "lang": "pt-BR",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "background_color": "#000000",
@@ -14,25 +14,25 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-192-maskable.png",
+      "src": "./icons/icon-192-maskable.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512-maskable.png",
+      "src": "./icons/icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

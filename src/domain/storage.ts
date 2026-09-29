@@ -61,7 +61,18 @@ const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
 
 function validPlayer(value: unknown): value is Player {
-  const icons = ["revolver", "vest", "money", "car", "star"];
+  const icons = [
+    "revolver",
+    "lighter",
+    "broken-bottle",
+    "knife",
+    "vest",
+    "money",
+    "car",
+    "star",
+    "dice",
+    "flame",
+  ];
   return (
     isRecord(value) &&
     typeof value.id === "string" &&
@@ -71,7 +82,7 @@ function validPlayer(value: unknown): value is Player {
     value.name.length <= 24 &&
     Number.isInteger(value.color) &&
     Number(value.color) >= 0 &&
-    Number(value.color) <= 3 &&
+    Number(value.color) <= 9 &&
     (value["customColor"] === undefined ||
       (typeof value["customColor"] === "string" &&
         /^#[\da-fA-F]{6}$/.test(value["customColor"]))) &&

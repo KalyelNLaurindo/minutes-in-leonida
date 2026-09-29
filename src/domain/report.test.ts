@@ -57,7 +57,7 @@ describe("session report", () => {
     const completed = end(resumed, 21_000);
     const report = buildSessionReport(completed);
 
-    expect(report).toContain("| 0min 20s | 5 min | 2 | 1 | 0min 10s |");
+    expect(report).toContain("| 0min 20,000s | 5 min | 2 | 1 | 0min 10,000s |");
   });
 
   it("exports the selected language for English and Spanish", () => {
