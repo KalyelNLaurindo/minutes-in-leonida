@@ -209,12 +209,15 @@ export default function LeonidaApp() {
                 <br />
                 <span>IN LEONIDA</span>
               </h1>
-              <p>Uma cidade. Um controle. A vez é de todo mundo.</p>
+              <p>
+                Vão jogar GTA VI em turma, mas só há um controle? Revezem os turnos e tentem não
+                chamar a polícia no caminho.
+              </p>
               <Button
                 className="primary-cta"
                 onClick={() => go(data.players.length >= 2 ? "setup" : "players")}
               >
-                NOVA SESSÃO <ArrowRight />
+                MONTAR SESSÃO <ArrowRight />
               </Button>
             </div>
             <div className="home-bottom">
