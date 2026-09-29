@@ -1,4 +1,4 @@
-const isPublishedOrigin = () => {
+const shouldDisableSW = () => {
   const { hostname } = window.location;
   const localOrigin =
     hostname === "localhost" ||
@@ -21,7 +21,7 @@ const isPublishedOrigin = () => {
   }
   return (
     !import.meta.env.PROD ||
-    !matchesPublishedOrigin ||
+    (Boolean(publishedUrl) && !matchesPublishedOrigin) ||
     window.self !== window.top ||
     localOrigin ||
     previewHost ||
@@ -30,7 +30,7 @@ const isPublishedOrigin = () => {
 };
 export async function registerOffline() {
   if (!("serviceWorker" in navigator)) return;
-  if (!isPublishedOrigin()) {
+  if (shouldDisableSW()) {
     const scriptPath = `${import.meta.env.BASE_URL}sw.js`;
     const registrations = await navigator.serviceWorker.getRegistrations();
     await Promise.all(
