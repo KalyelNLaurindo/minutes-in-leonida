@@ -319,10 +319,10 @@ h1, h2, h3, p { margin-top: 0; }
  .site-footer { padding: 17px 20px max(20px, env(safe-area-inset-bottom)); font-size: 9px; gap: 15px; }
  .site-footer span:last-child { display: none; }
  .home-view { display: flex; flex-direction: column; justify-content: space-between; min-height: calc(100svh - 120px); padding: 76px 24px 22px; }
- .home-copy { width: 100%; max-width: none; align-self: stretch; margin: 0; text-align: left; }
+ .home-copy { width: 100%; max-width: none; align-self: stretch; margin: 0; text-align: center; }
  .home-copy p { font-size: 15px; line-height: 1.5; max-width: 290px; }
- .home-copy p { margin-left: 0; margin-right: 0; }
- .home-steps { justify-content: flex-start; gap: 8px 10px; margin-top: 22px; font-size: 10px; }
+ .home-copy p { margin-inline: auto; }
+ .home-steps { justify-content: center; gap: 8px 10px; margin-top: 22px; font-size: 10px; }
  .home-steps svg { width: 12px; height: 12px; }
  .home-bottom { align-items: flex-start; flex-direction: column; }
  .home-shortcuts { width: 100%; justify-content: space-between; }
