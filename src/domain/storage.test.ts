@@ -75,7 +75,7 @@ describe("versioned local repository", () => {
 
   it("migrates valid v1 sessions to the default duration and saves v2 copies", () => {
     vi.stubGlobal("localStorage", storage);
-    const oldSession = createSession(players, 100, () => 0);
+    const oldSession = createSession(players, 100, 20, () => 0);
     const legacy = {
       version: 1,
       players,
@@ -97,6 +97,14 @@ describe("versioned local repository", () => {
     storage.failWrites = true;
     expect(save(sampleData())).toMatchObject({ ok: false, backupOk: false });
     expect(load().issue).toBeUndefined();
+  });
+
+  it("reports unserializable state without throwing into the UI", () => {
+    vi.stubGlobal("localStorage", storage);
+    const cyclic = sampleData() as AppData & { circular?: AppData };
+    cyclic.circular = cyclic;
+
+    expect(save(cyclic)).toMatchObject({ ok: false, backupOk: false });
   });
 
   it("validates imported JSON before it reaches application state", () => {

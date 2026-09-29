@@ -79,7 +79,8 @@ export function useGame() {
     if (!ready) return;
     const tick = () => processTimer(Date.now());
     tick();
-    const timer = window.setInterval(tick, 250);
+    // The clock renders whole seconds; 4 Hz only caused redundant React work.
+    const timer = window.setInterval(tick, 1_000);
     document.addEventListener("visibilitychange", tick);
     window.addEventListener("focus", tick);
     return () => {
@@ -95,11 +96,21 @@ export function useGame() {
     return () => window.clearTimeout(timer);
   }, [signal]);
 
-  const mutate = (callback: (current: AppData) => AppData) => update(callback(dataRef.current));
+  const mutate = (callback: (current: AppData) => AppData) => {
+    const current = dataRef.current;
+    const next = callback(current);
+    if (next !== current) update(next);
+  };
+
+  const validateColor = (color: number) => {
+    if (!Number.isInteger(color) || color < 0 || color > 3)
+      throw new Error("Escolha uma das cores disponíveis.");
+  };
 
   const addPlayer = (name: string, color: number) => {
     const trimmed = name.trim().replace(/\s+/g, " ");
     if (!trimmed || trimmed.length > 24) throw new Error("Use um nome de 1 a 24 caracteres.");
+    validateColor(color);
     if (
       dataRef.current.players.some(
         (player) => player.name.toLocaleLowerCase("pt-BR") === trimmed.toLocaleLowerCase("pt-BR"),
@@ -116,6 +127,7 @@ export function useGame() {
   const editPlayer = (id: string, name: string, color: number) => {
     const trimmed = name.trim().replace(/\s+/g, " ");
     if (!trimmed || trimmed.length > 24) throw new Error("Use um nome de 1 a 24 caracteres.");
+    validateColor(color);
     if (!dataRef.current.players.some((player) => player.id === id))
       throw new Error("Jogador não encontrado.");
     if (
@@ -208,7 +220,10 @@ export function useGame() {
           throw new Error("Salve esse tempo como preset antes de selecioná-lo.");
         settings.selectedTurnMinutes = selected;
       }
-      if (partial.volume !== undefined && (partial.volume < 0 || partial.volume > 1))
+      if (
+        partial.volume !== undefined &&
+        (!Number.isFinite(partial.volume) || partial.volume < 0 || partial.volume > 1)
+      )
         throw new Error("O volume deve ficar entre 0 e 100%.");
       return { ...current, settings };
     });

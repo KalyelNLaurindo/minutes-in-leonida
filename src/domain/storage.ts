@@ -222,7 +222,8 @@ function migrateV1(value: unknown): AppData | null {
       selectedTurnMinutes: DEFAULT_TURN_MINUTES,
     },
   };
-  return session === null && value.session !== null ? null : migrated;
+  if (session === null && value.session !== null) return null;
+  return isAppData(migrated) ? migrated : null;
 }
 
 type StoredEnvelope = { revision: number; data: AppData };
@@ -310,11 +311,19 @@ export function load(): LoadResult {
 
 /** Stamp both copies so recovery can select the newest valid state after a partial write. */
 export function save(data: AppData): SaveResult {
-  let revision = 1;
   const primary = readValid(PRIMARY_KEY);
   const backup = readValid(BACKUP_KEY);
-  revision = Math.max(primary?.revision ?? 0, backup?.revision ?? 0) + 1;
-  const serialized = JSON.stringify({ revision, data });
+  const revision = Math.max(primary?.revision ?? 0, backup?.revision ?? 0) + 1;
+  let serialized: string;
+  try {
+    serialized = JSON.stringify({ revision, data });
+  } catch {
+    return {
+      ok: false,
+      backupOk: false,
+      issue: "Não foi possível preparar os dados para salvar.",
+    };
+  }
   let backupOk = false;
   let primaryOk = false;
   try {

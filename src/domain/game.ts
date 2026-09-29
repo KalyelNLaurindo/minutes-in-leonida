@@ -93,7 +93,7 @@ export function normalizeMinutes(minutes: number): number {
 export function createSession(
   players: Player[],
   now: number,
-  turnMinutesOrRandom: number | ((max: number) => number) = DEFAULT_TURN_MINUTES,
+  turnMinutes = DEFAULT_TURN_MINUTES,
   random?: (max: number) => number,
 ): Session {
   if (
@@ -104,13 +104,9 @@ export function createSession(
   ) {
     throw new Error("Selecione de 2 a 4 jogadores com nomes diferentes.");
   }
-  // Keep the original test/helper call shape valid while exposing configurable duration.
-  const turnMinutes =
-    typeof turnMinutesOrRandom === "number" ? turnMinutesOrRandom : DEFAULT_TURN_MINUTES;
-  const randomSource = typeof turnMinutesOrRandom === "function" ? turnMinutesOrRandom : random;
   return {
     id: uid(),
-    players: shuffle(players, randomSource),
+    players: shuffle(players, random),
     status: "ORDER_READY",
     index: 0,
     createdAt: now,
@@ -241,17 +237,33 @@ export function end(session: Session, now: number): Session {
 }
 
 export function stats(session: Session) {
+  const totals = new Map(
+    session.players.map((player) => [
+      player.id,
+      { turns: 0, deaths: 0, timeouts: 0, totalMs: 0, longestMs: 0 },
+    ]),
+  );
+
+  // Aggregate once so report and summary work in O(players + turns).
+  for (const turn of session.turns) {
+    if (!turn.endReason) continue;
+    const total = totals.get(turn.playerId);
+    if (!total) continue;
+
+    const duration = turn.activeDurationMs ?? 0;
+    total.turns += 1;
+    total.totalMs += duration;
+    total.longestMs = Math.max(total.longestMs, duration);
+    if (turn.endReason === "DEATH") total.deaths += 1;
+    if (turn.endReason === "TIMEOUT") total.timeouts += 1;
+  }
+
   return session.players.map((player) => {
-    const turns = session.turns.filter((turn) => turn.playerId === player.id && turn.endReason);
-    const totalMs = turns.reduce((sum, turn) => sum + (turn.activeDurationMs ?? 0), 0);
+    const total = totals.get(player.id)!;
     return {
       player,
-      turns: turns.length,
-      deaths: turns.filter((turn) => turn.endReason === "DEATH").length,
-      timeouts: turns.filter((turn) => turn.endReason === "TIMEOUT").length,
-      totalMs,
-      averageMs: turns.length ? totalMs / turns.length : 0,
-      longestMs: Math.max(0, ...turns.map((turn) => turn.activeDurationMs ?? 0)),
+      ...total,
+      averageMs: total.turns ? total.totalMs / total.turns : 0,
     };
   });
 }

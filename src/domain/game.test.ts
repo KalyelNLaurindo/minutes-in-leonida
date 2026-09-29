@@ -27,7 +27,7 @@ const getTurn = (turns: ReturnType<typeof start>["turns"], index: number) => {
   if (!turn) throw Error("Missing test turn");
   return turn;
 };
-const ordered = (count: number) => createSession(players.slice(0, count), 0, () => 0);
+const ordered = (count: number) => createSession(players.slice(0, count), 0, 20, () => 0);
 describe("game rules", () => {
   it("rejects invalid participant counts and repeated names", () => {
     expect(() => ordered(1)).toThrow();
