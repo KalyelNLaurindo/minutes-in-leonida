@@ -99,6 +99,25 @@ describe("versioned local repository", () => {
     ).toBe(true);
   });
 
+  it("migrates saved duration presets to the single saved turn length", () => {
+    vi.stubGlobal("localStorage", storage);
+    const legacyData = {
+      ...sampleData(),
+      settings: {
+        ...defaults.settings,
+        selectedTurnMinutes: 12,
+        turnPresets: [5, 12, 20],
+      },
+    };
+    storage.setItem("minutes-in-leonida:v2", JSON.stringify({ revision: 4, data: legacyData }));
+
+    const result = load();
+
+    expect(result.data.settings.selectedTurnMinutes).toBe(12);
+    expect(result.data.settings.alarmSound).toBe("builtin");
+    expect(result.data.settings).not.toHaveProperty("turnPresets");
+  });
+
   it("recovers the newest valid backup and repairs the primary slot", () => {
     vi.stubGlobal("localStorage", storage);
     const older = { revision: 1, data: defaults };

@@ -40,9 +40,9 @@ export type Session = {
 export type Settings = {
   locale?: "pt" | "en" | "es";
   alarm: boolean;
+  alarmSound: "builtin" | "custom";
   volume: number;
   vibration: boolean;
-  turnPresets: number[];
   selectedTurnMinutes: number;
 };
 export type AppData = {
@@ -61,9 +61,9 @@ export const defaults: AppData = {
   settings: {
     locale: "pt",
     alarm: true,
+    alarmSound: "builtin",
     volume: 0.7,
     vibration: true,
-    turnPresets: [DEFAULT_TURN_MINUTES],
     selectedTurnMinutes: DEFAULT_TURN_MINUTES,
   },
 };

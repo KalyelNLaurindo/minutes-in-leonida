@@ -1,4 +1,5 @@
 import type { Settings } from "./game";
+import { playCustomAlarmSound } from "./alarm-sound";
 let context: AudioContext | undefined;
 export function primeAudio() {
   try {
@@ -10,36 +11,41 @@ export function primeAudio() {
     /* unsupported */
   }
 }
+
+function playBuiltinTone(volume: number) {
+  try {
+    primeAudio();
+    if (!context) return;
+    const at = context.currentTime;
+    [0, 0.22, 0.44].forEach((offset) => {
+      const oscillator = context?.createOscillator();
+      const gain = context?.createGain();
+      if (!oscillator || !gain || !context) return;
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(offset === 0.44 ? 740 : 590, at + offset);
+      gain.gain.setValueAtTime(0.001, at + offset);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.001, volume * 0.22), at + offset + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, at + offset + 0.18);
+      oscillator.connect(gain).connect(context.destination);
+      oscillator.start(at + offset);
+      oscillator.stop(at + offset + 0.19);
+    });
+  } catch {
+    /* Optional audio must never interrupt the turn transition. */
+  }
+}
+
+function playConfiguredSound(volume: number, sound: Settings["alarmSound"]) {
+  if (sound !== "custom" || !playCustomAlarmSound(volume, () => playBuiltinTone(volume))) {
+    playBuiltinTone(volume);
+  }
+}
+
 export function alarm(
-  settings: Pick<Settings, "alarm" | "volume" | "vibration" | "locale">,
+  settings: Pick<Settings, "alarm" | "alarmSound" | "volume" | "vibration" | "locale">,
   nextName: string,
 ) {
-  if (settings.alarm) {
-    try {
-      primeAudio();
-      if (context) {
-        const at = context.currentTime;
-        [0, 0.22, 0.44].forEach((offset) => {
-          const oscillator = context?.createOscillator(),
-            gain = context?.createGain();
-          if (!oscillator || !gain || !context) return;
-          oscillator.type = "sine";
-          oscillator.frequency.setValueAtTime(offset === 0.44 ? 740 : 590, at + offset);
-          gain.gain.setValueAtTime(0.001, at + offset);
-          gain.gain.exponentialRampToValueAtTime(
-            Math.max(0.001, settings.volume * 0.22),
-            at + offset + 0.03,
-          );
-          gain.gain.exponentialRampToValueAtTime(0.001, at + offset + 0.18);
-          oscillator.connect(gain).connect(context.destination);
-          oscillator.start(at + offset);
-          oscillator.stop(at + offset + 0.19);
-        });
-      }
-    } catch {
-      /* optional */
-    }
-  }
+  if (settings.alarm) playConfiguredSound(settings.volume, settings.alarmSound);
   if (settings.vibration)
     try {
       navigator.vibrate?.([180, 90, 180]);
@@ -76,9 +82,6 @@ export function alarm(
     /* Notifications are optional and may be denied by the browser. */
   }
 }
-export function testAlarm(volume: number, locale: Settings["locale"] = "pt") {
-  alarm(
-    { alarm: true, volume, vibration: false, locale },
-    locale === "en" ? "next player" : locale === "es" ? "siguiente jugador" : "próximo jogador",
-  );
+export function testAlarm(volume: number, alarmSound: Settings["alarmSound"] = "builtin") {
+  playConfiguredSound(volume, alarmSound);
 }

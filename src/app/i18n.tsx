@@ -70,12 +70,24 @@ const dictionaries: Record<Locale, Record<string, string>> = {
     "LINHA DO TEMPO": "TIMELINE",
     "Exportar placar (.md)": "Export score (.md)",
     "DURAÇÃO DOS TURNOS": "TURN LENGTH",
-    "Preset da próxima sessão": "Next session preset",
-    "Esta escolha fica salva; sessões em andamento mantêm o tempo original.":
-      "This choice is saved; ongoing sessions keep their original duration.",
+    "Tempo de cada turno": "Turn length",
+    "Este tempo fica salvo para as próximas sessões.":
+      "This duration is saved for future sessions.",
+    "Minutos por turno": "Minutes per turn",
+    Salvar: "Save",
+    "Toque do alarme": "Alarm sound",
+    "Som padrão do aplicativo": "App default sound",
+    "Escolher áudio": "Choose audio",
+    "Usar padrão": "Use default",
+    "Escolha um arquivo de áudio válido.": "Choose a valid audio file.",
+    "O arquivo de áudio está vazio.": "The audio file is empty.",
+    "O áudio deve ter no máximo 8 MB.": "Audio files must be 8 MB or smaller.",
+    "Este navegador não oferece armazenamento local de áudio.":
+      "This browser does not support local audio storage.",
+    "O áudio fica neste navegador e não entra na cópia JSON.":
+      "The audio stays in this browser and is not included in the JSON backup.",
+    "Não foi possível salvar o tempo.": "Could not save the duration.",
     min: "min",
-    "Criar preset (1 a 180 minutos)": "Create a preset (1–180 minutes)",
-    "Salvar preset": "Save preset",
     ALERTAS: "ALERTS",
     "Alarme sonoro": "Sound alarm",
     "Aviso quando o tempo acabar e o app estiver aberto":
@@ -280,12 +292,24 @@ const dictionaries: Record<Locale, Record<string, string>> = {
     "LINHA DO TEMPO": "LÍNEA DE TIEMPO",
     "Exportar placar (.md)": "Exportar marcador (.md)",
     "DURAÇÃO DOS TURNOS": "DURACIÓN DE LOS TURNOS",
-    "Preset da próxima sessão": "Duración para la próxima sesión",
-    "Esta escolha fica salva; sessões em andamento mantêm o tempo original.":
-      "La elección se guarda; las sesiones en curso mantienen su duración original.",
+    "Tempo de cada turno": "Duración de cada turno",
+    "Este tempo fica salvo para as próximas sessões.":
+      "Este tiempo se guarda para próximas partidas.",
+    "Minutos por turno": "Minutos por turno",
+    Salvar: "Guardar",
+    "Toque do alarme": "Sonido de alarma",
+    "Som padrão do aplicativo": "Sonido predeterminado de la app",
+    "Escolher áudio": "Elegir audio",
+    "Usar padrão": "Usar predeterminado",
+    "Escolha um arquivo de áudio válido.": "Elige un archivo de audio válido.",
+    "O arquivo de áudio está vazio.": "El archivo de audio está vacío.",
+    "O áudio deve ter no máximo 8 MB.": "El audio debe ocupar 8 MB o menos.",
+    "Este navegador não oferece armazenamento local de áudio.":
+      "Este navegador no admite almacenamiento local de audio.",
+    "O áudio fica neste navegador e não entra na cópia JSON.":
+      "El audio se guarda en este navegador y no se incluye en la copia JSON.",
+    "Não foi possível salvar o tempo.": "No se pudo guardar la duración.",
     min: "min",
-    "Criar preset (1 a 180 minutos)": "Crear duración (1–180 minutos)",
-    "Salvar preset": "Guardar duración",
     ALERTAS: "ALERTAS",
     "Alarme sonoro": "Alarma sonora",
     "Aviso quando o tempo acabar e o app estiver aberto":

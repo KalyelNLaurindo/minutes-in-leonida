@@ -150,20 +150,16 @@ function validSettings(value: unknown): value is Settings {
       value["locale"] === "en" ||
       value["locale"] === "es") &&
     typeof value.alarm === "boolean" &&
+    (value["alarmSound"] === undefined ||
+      value["alarmSound"] === "builtin" ||
+      value["alarmSound"] === "custom") &&
     typeof value.vibration === "boolean" &&
     isFiniteNumber(value.volume) &&
     value.volume >= 0 &&
     value.volume <= 1 &&
-    Array.isArray(value.turnPresets) &&
-    value.turnPresets.length > 0 &&
-    value.turnPresets.length <= 30 &&
-    value.turnPresets.every(
-      (minutes) =>
-        Number.isInteger(minutes) && minutes >= MIN_TURN_MINUTES && minutes <= MAX_TURN_MINUTES,
-    ) &&
-    new Set(value.turnPresets).size === value.turnPresets.length &&
     Number.isInteger(value.selectedTurnMinutes) &&
-    value.turnPresets.includes(Number(value.selectedTurnMinutes))
+    Number(value.selectedTurnMinutes) >= MIN_TURN_MINUTES &&
+    Number(value.selectedTurnMinutes) <= MAX_TURN_MINUTES
   );
 }
 
@@ -183,11 +179,27 @@ export function isAppData(value: unknown): value is AppData {
   );
 }
 
+/** Remove obsolete preset data while adapting older v2 saves to the single-duration model. */
+function normalizeAppData(value: unknown): AppData | null {
+  if (!isAppData(value) || !isRecord(value.settings)) return null;
+  const legacySettings = value.settings as Settings & { turnPresets?: unknown };
+  const { turnPresets: _legacyPresets, ...storedSettings } = legacySettings;
+  return {
+    ...value,
+    settings: {
+      ...defaults.settings,
+      ...storedSettings,
+      alarmSound: storedSettings.alarmSound === "custom" ? "custom" : "builtin",
+    },
+  };
+}
+
 /** Parse an exported file without mutating browser storage. */
 export function decodeBackup(raw: string): AppData {
   try {
     const value: unknown = JSON.parse(raw);
-    if (isAppData(value)) return value;
+    const normalized = normalizeAppData(value);
+    if (normalized) return normalized;
   } catch {
     /* Return a clear validation error below. */
   }
@@ -236,8 +248,8 @@ function migrateV1(value: unknown): AppData | null {
         typeof oldSettings.vibration === "boolean"
           ? oldSettings.vibration
           : defaults.settings.vibration,
-      turnPresets: [DEFAULT_TURN_MINUTES],
       selectedTurnMinutes: DEFAULT_TURN_MINUTES,
+      alarmSound: "builtin",
     },
   };
   if (session === null && value.session !== null) return null;
@@ -251,11 +263,13 @@ function readValid(key: string): StoredEnvelope | null {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
     const value: unknown = JSON.parse(raw);
-    if (isRecord(value) && Number.isInteger(value.revision) && isAppData(value.data)) {
-      return { revision: Number(value.revision), data: value.data };
+    if (isRecord(value) && Number.isInteger(value.revision)) {
+      const data = normalizeAppData(value.data);
+      if (data) return { revision: Number(value.revision), data };
     }
     // Accept unwrapped v2 data from early development builds.
-    return isAppData(value) ? { revision: 0, data: value } : null;
+    const data = normalizeAppData(value);
+    return data ? { revision: 0, data } : null;
   } catch {
     return null;
   }

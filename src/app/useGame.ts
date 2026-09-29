@@ -20,6 +20,11 @@ import {
 } from "../domain/game";
 import { clear, decodeBackup, isRepositoryKey, limitHistory, load, save } from "../domain/storage";
 import { alarm, primeAudio } from "../domain/alerts";
+import {
+  activateCustomAlarmSound,
+  deleteCustomAlarmSound,
+  loadCustomAlarmSound,
+} from "../domain/alarm-sound";
 
 export type PersistenceState = "saved" | "backup" | "unsaved" | "recovered" | "migrated";
 
@@ -65,6 +70,20 @@ export function useGame() {
     applyLoadedData(result);
     setReady(true);
   }, [applyLoadedData]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadCustomAlarmSound()
+      .then((sound) => {
+        if (!cancelled) activateCustomAlarmSound(sound?.blob ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) activateCustomAlarmSound(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const syncFromOtherTab = (event: StorageEvent) => {
@@ -256,21 +275,11 @@ export function useGame() {
   const changeSettings = (partial: Partial<Settings>) =>
     mutate((current) => {
       const settings = { ...current.settings, ...partial };
-      if (partial.turnPresets) {
-        const presets = [...new Set(partial.turnPresets.map(normalizeMinutes))].sort(
-          (a, b) => a - b,
-        );
-        if (presets.length === 0) throw new Error("Mantenha pelo menos um preset de duração.");
-        settings.turnPresets = presets;
-        if (!presets.includes(settings.selectedTurnMinutes))
-          settings.selectedTurnMinutes = presets[0]!;
-      }
       if (partial.selectedTurnMinutes !== undefined) {
-        const selected = normalizeMinutes(partial.selectedTurnMinutes);
-        if (!settings.turnPresets.includes(selected))
-          throw new Error("Salve esse tempo como preset antes de selecioná-lo.");
-        settings.selectedTurnMinutes = selected;
+        settings.selectedTurnMinutes = normalizeMinutes(partial.selectedTurnMinutes);
       }
+      if (partial.alarmSound !== undefined && !["builtin", "custom"].includes(partial.alarmSound))
+        throw new Error("Escolha um toque de alarme válido.");
       if (
         partial.volume !== undefined &&
         (!Number.isFinite(partial.volume) || partial.volume < 0 || partial.volume > 1)
@@ -281,6 +290,10 @@ export function useGame() {
 
   const resetData = () => {
     const result = clear();
+    activateCustomAlarmSound(null);
+    void deleteCustomAlarmSound().catch(() => {
+      /* Local audio cleanup is best effort; JSON data has its own persistence status. */
+    });
     dataRef.current = defaults;
     setData(defaults);
     setPersistence(

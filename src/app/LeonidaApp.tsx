@@ -17,7 +17,8 @@ import {
   Bell,
   Download,
   Clock3,
-  X,
+  Music2,
+  Upload,
   Gamepad2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,12 @@ import {
   type Session,
 } from "../domain/game";
 import { testAlarm } from "../domain/alerts";
+import {
+  activateCustomAlarmSound,
+  deleteCustomAlarmSound,
+  loadCustomAlarmSound,
+  saveCustomAlarmSound,
+} from "../domain/alarm-sound";
 import { buildSessionReport } from "../domain/report";
 import scenery from "../assets/leonida-night.jpg";
 import { L, LocaleContext, translate, type Locale } from "./i18n";
@@ -1148,9 +1155,30 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
   const locale = settings.locale ?? "pt";
   const supported = typeof window !== "undefined" && "Notification" in window;
   const [permission, setPermission] = useState(supported ? Notification.permission : "unavailable");
-  const [presetDraft, setPresetDraft] = useState(String(settings.selectedTurnMinutes));
-  const [presetError, setPresetError] = useState("");
+  const [minutesDraft, setMinutesDraft] = useState(String(settings.selectedTurnMinutes));
+  const [durationError, setDurationError] = useState("");
+  const [alarmSoundName, setAlarmSoundName] = useState("");
+  const [alarmSoundError, setAlarmSoundError] = useState("");
   const [backupError, setBackupError] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    void loadCustomAlarmSound()
+      .then((sound) => {
+        if (cancelled) return;
+        setAlarmSoundName(sound?.name ?? "");
+        activateCustomAlarmSound(sound?.blob ?? null);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setAlarmSoundError(
+            error instanceof Error ? error.message : "Não foi possível carregar o toque salvo.",
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const downloadBackup = () => {
     let url: string | undefined;
     try {
@@ -1192,14 +1220,42 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
       );
     }
   };
-  const savePreset = () => {
+  const saveTurnDuration = () => {
     try {
-      const minutes = Number(presetDraft);
-      const presets = [...settings.turnPresets, minutes];
-      game.changeSettings({ turnPresets: presets, selectedTurnMinutes: minutes });
-      setPresetError("");
+      const minutes = Number(minutesDraft);
+      game.changeSettings({ selectedTurnMinutes: minutes });
+      setDurationError("");
     } catch (error) {
-      setPresetError(error instanceof Error ? error.message : "Não foi possível salvar o preset.");
+      setDurationError(error instanceof Error ? error.message : "Não foi possível salvar o tempo.");
+    }
+  };
+  const chooseAlarmSound = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      await saveCustomAlarmSound(file);
+      activateCustomAlarmSound(file);
+      game.changeSettings({ alarmSound: "custom" });
+      setAlarmSoundName(file.name);
+      setAlarmSoundError("");
+    } catch (error) {
+      setAlarmSoundError(
+        error instanceof Error ? error.message : "Não foi possível salvar o toque personalizado.",
+      );
+    }
+  };
+  const useBuiltinAlarm = async () => {
+    activateCustomAlarmSound(null);
+    game.changeSettings({ alarmSound: "builtin" });
+    setAlarmSoundName("");
+    try {
+      await deleteCustomAlarmSound();
+      setAlarmSoundError("");
+    } catch (error) {
+      setAlarmSoundError(
+        error instanceof Error ? error.message : "Não foi possível remover o toque personalizado.",
+      );
     }
   };
   return (
@@ -1210,76 +1266,42 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
             <L>DURAÇÃO DOS TURNOS</L>
           </span>
         </div>
-        <div className="setting-row">
+        <div className="setting-row duration-setting-row">
           <span className="setting-icon">
             <Clock3 />
           </span>
-          <label className="setting-copy" htmlFor="turn-preset">
+          <label className="setting-copy" htmlFor="turn-minutes">
             <strong>
-              <L>Preset da próxima sessão</L>
+              <L>Tempo de cada turno</L>
             </strong>
             <small>
-              <L>Esta escolha fica salva; sessões em andamento mantêm o tempo original.</L>
+              <L>Este tempo fica salvo para as próximas sessões.</L>
             </small>
           </label>
-          <select
-            id="turn-preset"
-            value={settings.selectedTurnMinutes}
-            onChange={(event) =>
-              game.changeSettings({ selectedTurnMinutes: Number(event.target.value) })
-            }
-          >
-            {settings.turnPresets.map((minutes) => (
-              <option key={minutes} value={minutes}>
-                {minutes} <L> min</L>
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="preset-editor">
-          <label htmlFor="preset-minutes">
-            <L>Criar preset (1 a 180 minutos)</L>
-          </label>
-          <div>
+          <div className="duration-control">
             <input
-              id="preset-minutes"
+              id="turn-minutes"
               type="number"
               min="1"
               max="180"
               step="1"
-              value={presetDraft}
-              onChange={(event) => setPresetDraft(event.target.value)}
+              value={minutesDraft}
+              aria-label={translate(locale, "Minutos por turno")}
+              onChange={(event) => setMinutesDraft(event.target.value)}
             />
-            <Button variant="outline" onClick={savePreset}>
-              <Plus /> <L> Salvar preset</L>
+            <span>
+              <L>min</L>
+            </span>
+            <Button variant="outline" size="sm" onClick={saveTurnDuration}>
+              <L>Salvar</L>
             </Button>
           </div>
-          {presetError && (
-            <p className="form-error" role="alert">
-              <L>{presetError}</L>
-            </p>
-          )}
-          {settings.turnPresets.length > 1 && (
-            <div className="preset-chips">
-              {settings.turnPresets.map((minutes) => (
-                <Button
-                  key={minutes}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    game.changeSettings({
-                      turnPresets: settings.turnPresets.filter((value) => value !== minutes),
-                    })
-                  }
-                  aria-label={translate(locale, `Remover preset de ${minutes} minutos`)}
-                >
-                  {minutes} <L> min </L>
-                  <X />
-                </Button>
-              ))}
-            </div>
-          )}
         </div>
+        {durationError && (
+          <p className="form-error" role="alert">
+            <L>{durationError}</L>
+          </p>
+        )}
       </div>
       <div className="setting-group">
         <div className="section-title">
@@ -1305,6 +1327,45 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
             onChange={(e) => game.changeSettings({ alarm: e.target.checked })}
           />
         </label>
+        <div className="alarm-sound-row">
+          <div className="alarm-sound-copy">
+            <Music2 aria-hidden="true" />
+            <div>
+              <strong>
+                <L>Toque do alarme</L>
+              </strong>
+              <small>
+                {settings.alarmSound === "custom" && alarmSoundName ? (
+                  alarmSoundName
+                ) : (
+                  <L>Som padrão do aplicativo</L>
+                )}
+              </small>
+              <small>
+                <L>O áudio fica neste navegador e não entra na cópia JSON.</L>
+              </small>
+            </div>
+          </div>
+          <div className="alarm-sound-actions">
+            <label className="alarm-file-picker">
+              <Upload aria-hidden="true" />
+              <span>
+                <L>Escolher áudio</L>
+              </span>
+              <input type="file" accept="audio/*" onChange={chooseAlarmSound} />
+            </label>
+            {settings.alarmSound === "custom" && (
+              <Button variant="ghost" size="sm" onClick={useBuiltinAlarm}>
+                <L>Usar padrão</L>
+              </Button>
+            )}
+          </div>
+          {alarmSoundError && (
+            <p className="setting-note" role="alert">
+              <L>{alarmSoundError}</L>
+            </p>
+          )}
+        </div>
         <div className="setting-row">
           <span className="setting-icon">
             <Volume2 />
@@ -1332,7 +1393,7 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
         <Button
           variant="outline"
           className="setting-action"
-          onClick={() => testAlarm(settings.volume, locale)}
+          onClick={() => testAlarm(settings.volume, settings.alarmSound)}
         >
           <Play /> <L> Testar alarme</L>
         </Button>
