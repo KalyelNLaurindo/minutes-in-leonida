@@ -173,7 +173,7 @@ button { cursor: pointer; }
 .language-switch select { width: 64px; border: 0; outline: 0; color: inherit; background: transparent; font: 700 11px 'DM Sans', sans-serif; cursor: pointer; }
 .language-switch option { color: oklch(0.16 0.025 305); }
 .site-footer, .eyebrow, .panel-label, .section-title, .session-live, .turn-label, .next-up>span, .order-strip>span, .home-edition, .selection-footer, .first-badge, .summary-metrics small { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; }
-.site-footer { width: min(calc(100% - 48px), 1800px); margin: auto auto 0; padding: 18px 24px max(20px, env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: center; gap: 20px; color: var(--muted-foreground); border: 1px solid var(--border); border-bottom: 0; border-radius: 18px 18px 0 0; background: oklch(0.16 0.03 305 / 38%); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.site-footer { width: min(calc(100% - 48px), 1800px); margin: auto auto 18px; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; gap: 20px; color: var(--muted-foreground); border: 1px solid var(--border); border-radius: 18px; background: oklch(0.16 0.03 305 / 52%); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: 0 12px 36px oklch(0.02 0.02 300 / 22%), inset 0 1px oklch(1 0 0 / 8%); }
 .footer-brand { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800; letter-spacing: .08em; color: var(--foreground); }
 .footer-brand span { margin-left: 6px; color: var(--muted-foreground); font: 600 10px 'DM Sans', sans-serif; letter-spacing: .04em; }
 .footer-credit { display: flex; align-items: center; gap: 7px; font-size: 10px; letter-spacing: .12em; }
@@ -367,7 +367,7 @@ h1, h2, h3, p { margin-top: 0; }
  .language-mark { font-size: 12px; }
  .language-mark span:first-child { font-size: 14px; }
  .language-switch select { width: 56px; font-size: 10px; }
- .site-footer { width: calc(100% - 24px); padding: 15px 12px max(16px, env(safe-area-inset-bottom)); font-size: 9px; gap: 12px; align-items: flex-start; flex-direction: column; }
+ .site-footer { width: calc(100% - 24px); margin-bottom: max(12px, env(safe-area-inset-bottom)); padding: 14px 14px; font-size: 9px; gap: 10px; align-items: flex-start; flex-direction: column; border-radius: 16px; }
  .footer-brand { font-size: 13px; }
  .footer-credit { flex-wrap: wrap; font-size: 9px; }
  .footer-credit strong { font-size: 11px; }

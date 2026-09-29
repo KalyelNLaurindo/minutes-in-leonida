@@ -19,7 +19,7 @@ import {
   Clock3,
   Music2,
   Upload,
-  Gamepad2,
+  Tv,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -383,7 +383,7 @@ export default function LeonidaApp() {
                   </div>
                   <ArrowRight aria-hidden="true" />
                   <div className="home-step">
-                    <Gamepad2 aria-hidden="true" />
+                    <Tv aria-hidden="true" />
                     <span>
                       <L>Passar o controle</L>
                     </span>
@@ -848,20 +848,15 @@ function Players({ game }: { game: Game }) {
               >
                 <Pencil />
               </Button>
-              <Confirm
-                title={`${translate(locale, "Remover")} ${p.name}?`}
-                description="O jogador será removido da sua lista. Sessões antigas continuarão intactas."
-                action={() => game.removePlayer(p.id)}
+              <Button
+                variant="ghost"
+                size="icon"
+                title={`${translate(locale, "Remover")} ${p.name}`}
+                aria-label={`${translate(locale, "Remover")} ${p.name}`}
+                onClick={() => game.removePlayer(p.id)}
               >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title={`${translate(locale, "Remover")} ${p.name}`}
-                  aria-label={`${translate(locale, "Remover")} ${p.name}`}
-                >
-                  <Trash2 />
-                </Button>
-              </Confirm>
+                <Trash2 />
+              </Button>
             </div>
           ))
         ) : (
