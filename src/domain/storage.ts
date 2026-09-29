@@ -15,6 +15,11 @@ const BACKUP_KEY = "minutes-in-leonida:backup:v2";
 const LEGACY_KEY = "minutes-in-leonida:v1";
 const MAX_HISTORY = 100;
 
+/** Identify cross-tab storage events that can change this app's persisted state. */
+export function isRepositoryKey(key: string | null): boolean {
+  return key === null || key === PRIMARY_KEY || key === BACKUP_KEY || key === LEGACY_KEY;
+}
+
 export type LoadResult = { data: AppData; recovered: boolean; migrated: boolean; issue?: string };
 export type SaveResult = { ok: boolean; backupOk: boolean; issue?: string };
 

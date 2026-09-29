@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { advance, createSession, defaults, start, type AppData, type Player } from "./game";
-import { decodeBackup, isAppData, load, save } from "./storage";
+import { decodeBackup, isAppData, isRepositoryKey, load, save } from "./storage";
 
 /** Small Storage-compatible double keeps repository tests independent from a browser. */
 class MemoryStorage implements Storage {
@@ -50,6 +50,14 @@ afterEach(() => {
 });
 
 describe("versioned local repository", () => {
+  it("recognizes only storage events that can change this app's data", () => {
+    expect(isRepositoryKey("minutes-in-leonida:v2")).toBe(true);
+    expect(isRepositoryKey("minutes-in-leonida:backup:v2")).toBe(true);
+    expect(isRepositoryKey("minutes-in-leonida:v1")).toBe(true);
+    expect(isRepositoryKey(null)).toBe(true);
+    expect(isRepositoryKey("unrelated-preference")).toBe(false);
+  });
+
   it("writes a versioned primary copy and a redundant backup", () => {
     vi.stubGlobal("localStorage", storage);
     const result = save(sampleData());

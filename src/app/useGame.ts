@@ -14,7 +14,7 @@ import {
   type Player,
   type Settings,
 } from "../domain/game";
-import { clear, decodeBackup, limitHistory, load, save } from "../domain/storage";
+import { clear, decodeBackup, isRepositoryKey, limitHistory, load, save } from "../domain/storage";
 import { alarm, primeAudio } from "../domain/alerts";
 
 export type PersistenceState = "saved" | "backup" | "unsaved" | "recovered" | "migrated";
@@ -29,6 +29,18 @@ export function useGame() {
   });
   const dataRef = useRef(data);
   dataRef.current = data;
+
+  const applyLoadedData = useCallback((result: ReturnType<typeof load>) => {
+    dataRef.current = result.data;
+    setData(result.data);
+    setPersistence(
+      result.issue
+        ? { state: result.recovered ? "recovered" : "unsaved", message: result.issue }
+        : result.migrated
+          ? { state: "migrated", message: "Seus dados foram atualizados para o novo formato." }
+          : { state: "saved" },
+    );
+  }, []);
 
   const update = useCallback((next: AppData) => {
     const bounded = limitHistory(next);
@@ -46,17 +58,17 @@ export function useGame() {
 
   useEffect(() => {
     const result = load();
-    dataRef.current = result.data;
-    setData(result.data);
-    setPersistence(
-      result.issue
-        ? { state: result.recovered ? "recovered" : "unsaved", message: result.issue }
-        : result.migrated
-          ? { state: "migrated", message: "Seus dados foram atualizados para o novo formato." }
-          : { state: "saved" },
-    );
+    applyLoadedData(result);
     setReady(true);
-  }, []);
+  }, [applyLoadedData]);
+
+  useEffect(() => {
+    const syncFromOtherTab = (event: StorageEvent) => {
+      if (isRepositoryKey(event.key)) applyLoadedData(load());
+    };
+    window.addEventListener("storage", syncFromOtherTab);
+    return () => window.removeEventListener("storage", syncFromOtherTab);
+  }, [applyLoadedData]);
 
   const processTimer = useCallback(
     (time: number) => {
