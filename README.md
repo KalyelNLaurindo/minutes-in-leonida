@@ -314,9 +314,11 @@ npm run build
 - [Radix UI](https://www.radix-ui.com/primitives/docs/overview/introduction) · [Tailwind CSS](https://tailwindcss.com/docs)
 - [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) · [GitHub Pages](https://docs.github.com/pages)
 
-## 📄 Licença
+## 📄 Licença e Propósito Comunitário
 
-O código-fonte deste projeto usa a licença MIT, descrita em [`LICENSE`](LICENSE).
+Este projeto é um **trabalho de fã, de código aberto e estritamente sem fins lucrativos**, desenvolvido para uso pessoal e comunitário — facilitando a divisão fraterna de turnos para que amigos e pessoas sem condições financeiras de ter múltiplos consoles possam compartilhar um mesmo videogame e jogo. O uso comercial ou lucrativo é expressamente proibido.
+
+Consulte o arquivo [`LICENSE`](LICENSE) para os termos completos de licença de uso pessoal e não comercial.
 
 <div align="center">
 
