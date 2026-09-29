@@ -1,2 +1,0 @@
-- Keep all session rules in pure client-side domain modules and persist via a versioned browser repository; private household use requires no server or account.
-- Register the offline app worker only on published production origins, never in development, local preview, or embedded previews, to prevent stale caches.
