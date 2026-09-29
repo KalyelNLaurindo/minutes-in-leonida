@@ -171,13 +171,14 @@ button { cursor: pointer; }
 .eyebrow-line { width: 25px; height: 2px; background: currentColor; display: inline-block; }
 h1, h2, h3, p { margin-top: 0; }
 .home-copy h1, .page-heading h1, .current-player { font-family: 'Barlow Condensed', Impact, sans-serif; font-weight: 800; letter-spacing: 0; text-transform: uppercase; }
-.home-copy .home-poster-heading { width: 100%; margin: 0 auto 28px; font-size: 0; line-height: 0; text-shadow: none; }
+.home-copy .home-poster-heading { width: 100%; margin: 0 auto 32px; font-size: 0; line-height: 0; text-shadow: none; }
 .home-poster { display: block; width: min(60%, 540px); height: auto; margin-inline: auto; border-radius: 16px; }
 .home-copy p, .page-heading p { color: var(--foreground); font-size: 17px; margin-bottom: 30px; }
+.home-copy p { margin-bottom: 34px; }
 .primary-cta { min-height: 58px; padding: 0 28px; border-radius: 4px; background: var(--primary); color: var(--primary-foreground); font-family: 'Barlow Condensed'; font-size: 20px; font-weight: 800; letter-spacing: 0.05em; justify-content: space-between; gap: 38px; box-shadow: 0 8px 32px oklch(0.15 0.02 300 / 30%); }
 .primary-cta:hover, .form-submit:hover { background: var(--coral); }
 .home-bottom { display: flex; justify-content: space-between; align-items: center; gap: 15px; border-top: 1px solid var(--border); padding-top: 18px; }
-.home-steps { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 14px; margin-top: 30px; color: var(--muted-foreground); font-family: 'Barlow Condensed'; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.home-steps { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 14px; margin-top: 34px; color: var(--muted-foreground); font-family: 'Barlow Condensed'; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .home-steps svg { width: 14px; height: 14px; color: var(--primary); }
 .home-edition { color: var(--muted-foreground); }
 .home-shortcuts { display: flex; gap: 10px; }
@@ -322,7 +323,7 @@ h1, h2, h3, p { margin-top: 0; }
  .home-copy { width: 100%; max-width: none; align-self: stretch; margin: 0; text-align: center; }
  .home-copy p { font-size: 15px; line-height: 1.5; max-width: 290px; }
  .home-copy p { margin-inline: auto; }
- .home-steps { justify-content: center; gap: 8px 10px; margin-top: 22px; font-size: 10px; }
+ .home-steps { justify-content: center; gap: 8px 10px; margin-top: 26px; font-size: 10px; }
  .home-steps svg { width: 12px; height: 12px; }
  .home-bottom { align-items: flex-start; flex-direction: column; }
  .home-shortcuts { width: 100%; justify-content: space-between; }
