@@ -1,0 +1,6 @@
+- [x] Implement local domain, persistence, timer and tests
+- [x] Build Portuguese player/session/history/settings interface
+- [x] Add offline installability, icon, local sound and font
+- [x] Verify core flow and mobile rendering
+- [x] Prioritize mobile-only experience as requested
+- [ ] Verify offline operation on a published installation (blocked until publication; preview deliberately disables offline caching)
