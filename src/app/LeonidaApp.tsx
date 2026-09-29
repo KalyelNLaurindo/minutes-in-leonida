@@ -16,9 +16,10 @@ import {
   Pencil,
   Bell,
   Download,
-  Home,
   Clock3,
   X,
+  Languages,
+  Gamepad2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,6 +45,7 @@ import {
 import { testAlarm } from "../domain/alerts";
 import { buildSessionReport } from "../domain/report";
 import scenery from "../assets/leonida-night.jpg";
+import { L, LocaleContext, translate, type Locale } from "./i18n";
 
 type View = "home" | "players" | "setup" | "draw" | "session" | "history" | "settings" | "summary";
 const palettes = ["tone-pink", "tone-orange", "tone-blue", "tone-lime"];
@@ -83,58 +85,121 @@ function Confirm({
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent className="glass-dialog">
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          <AlertDialogTitle>
+            <L>{title}</L>
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            <L>{description}</L>
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={action}>Confirmar</AlertDialogAction>
+          <AlertDialogCancel>
+            <L>Cancelar</L>
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={action}>
+            <L>Confirmar</L>
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
-function Header({ go, active }: { go: (v: View) => void; active: boolean }) {
+function DrawBoxIcon() {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <path d="M10 20h28l-2 22H12L10 20Z" />
+      <path d="M8 20h32M16 20V9h16v11M18 14h12M18 18h12M17 27h14M17 32h10" />
+    </svg>
+  );
+}
+function AimFigureIcon() {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <circle cx="13" cy="8" r="4" />
+      <path d="M13 12v14m0-10 9 5h7m-16 3-8 16m8-16 9 16m-9-20 13-4h7m-7-3h13v5H31m3-5v-2h5v2" />
+    </svg>
+  );
+}
+function Header({
+  go,
+  locale,
+  setLocale,
+}: {
+  go: (v: View) => void;
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+}) {
   return (
     <header className="site-header">
       <Button
         variant="ghost"
         className="brand-button"
-        onClick={() => go(active ? "session" : "home")}
-        aria-label="Início"
+        onClick={() => go("home")}
+        aria-label={translate(locale, "Início")}
       >
         <span className="brand-lockup">
           <img className="brand-mark" src="/brand/vi-mark.png" alt="" />
           <Logo />
         </span>
       </Button>
-      <nav className="header-nav" aria-label="Navegação principal">
+      <nav
+        className="header-nav"
+        aria-label={
+          locale === "pt"
+            ? "Navegação principal"
+            : locale === "en"
+              ? "Main navigation"
+              : "Navegación principal"
+        }
+      >
         <Button
           variant="ghost"
-          title="Início"
-          aria-label="Início"
-          onClick={() => go("home")}
+          title={translate(locale, "Jogadores")}
+          aria-label={translate(locale, "Jogadores")}
+          onClick={() => go("players")}
         >
-          <Home />
-          <span className="header-nav-label">Início</span>
-        </Button>
-        <Button variant="ghost" title="Jogadores" aria-label="Jogadores" onClick={() => go("players")}>
           <Users />
-          <span className="header-nav-label">Jogadores</span>
-        </Button>
-        <Button variant="ghost" title="Histórico" aria-label="Histórico" onClick={() => go("history")}>
-          <History />
-          <span className="header-nav-label">Histórico</span>
+          <span className="header-nav-label">
+            <L>Jogadores</L>
+          </span>
         </Button>
         <Button
           variant="ghost"
-          title="Configurações"
-          aria-label="Configurações"
+          title={translate(locale, "Histórico")}
+          aria-label={translate(locale, "Histórico")}
+          onClick={() => go("history")}
+        >
+          <History />
+          <span className="header-nav-label">
+            <L>Histórico</L>
+          </span>
+        </Button>
+        <Button
+          variant="ghost"
+          title={translate(locale, "Ajustes")}
+          aria-label={translate(locale, "Ajustes")}
           onClick={() => go("settings")}
         >
           <Settings2 />
-          <span className="header-nav-label">Ajustes</span>
+          <span className="header-nav-label">
+            <L>Ajustes</L>
+          </span>
         </Button>
+        <label
+          className="language-switch"
+          title={locale === "pt" ? "Idioma" : locale === "en" ? "Language" : "Idioma"}
+        >
+          <Languages aria-hidden="true" />
+          <select
+            value={locale}
+            aria-label={locale === "pt" ? "Idioma" : locale === "en" ? "Language" : "Idioma"}
+            onChange={(event) => setLocale(event.target.value as Locale)}
+          >
+            <option value="pt">Português</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+          </select>
+        </label>
       </nav>
     </header>
   );
@@ -142,6 +207,7 @@ function Header({ go, active }: { go: (v: View) => void; active: boolean }) {
 export default function LeonidaApp() {
   const game = useGame();
   const { data, ready } = game;
+  const locale = data.settings.locale ?? "pt";
   const [view, setView] = useState<View>("home");
   const [selected, setSelected] = useState<string[]>([]);
   const [selectedHistory, setSelectedHistory] = useState<string | null>(null);
@@ -149,14 +215,14 @@ export default function LeonidaApp() {
   const exportSessionReport = (session: Session) => {
     let url: string | undefined;
     try {
-      const report = new Blob([buildSessionReport(session)], {
+      const report = new Blob([buildSessionReport(session, locale)], {
         type: "text/markdown;charset=utf-8",
       });
       url = URL.createObjectURL(report);
       const link = document.createElement("a");
       const date = new Date(session.endedAt ?? Date.now()).toISOString().slice(0, 10);
       link.href = url;
-      link.download = `minutes-in-leonida-placar-${date}.md`;
+      link.download = `minutes-in-leonida-score-${date}.md`;
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(url!), 1000);
       setActionError("");
@@ -186,279 +252,331 @@ export default function LeonidaApp() {
       </main>
     );
   return (
-    <div className="app-shell">
+    <div className="app-shell" lang={locale}>
       <div
         className="scenery"
         style={{
           backgroundImage: `linear-gradient(to bottom, var(--scenery-top), var(--scenery-bottom)), url(${scenery})`,
         }}
       />
-      <div className="app-content">
-        <Header go={go} active={!!active} />
-        {game.persistence.message && (
-          <div
-            className={`persistence-notice ${game.persistence.state === "unsaved" ? "persistence-error" : ""}`}
-            role="status"
-          >
-            {game.persistence.message}
-          </div>
-        )}
-        {actionError && (
-          <div className="persistence-notice persistence-error" role="alert">
-            {actionError}
-          </div>
-        )}
-        {currentView === "home" && (
-          <main className="home-view">
-            <div className="home-copy">
-              <h1 className="home-poster-heading">
-                <img
-                  className="home-poster"
-                  src="/brand/minutes-in-leonida-poster.jpg"
-                  alt="Minutes in Leonida — Seu tempo, sua vez."
-                />
-              </h1>
-              <p>
-                A turma vai se aventurar pelas ruas da Cidade do Vício, mas só tem um controle?
-                Revezem os turnos e tentem não chamar a polícia no caminho.
-              </p>
-              <Button
-                className="primary-cta"
-                onClick={() => go(data.players.length >= 2 ? "setup" : "players")}
-              >
-                MONTAR SESSÃO <ArrowRight />
-              </Button>
-              <div className="home-steps" aria-label="Como funciona">
-                <span>Sortear a ordem</span>
-                <ArrowRight aria-hidden="true" />
-                <span>Jogar o turno</span>
-                <ArrowRight aria-hidden="true" />
-                <span>Passar o controle</span>
-              </div>
-            </div>
-            <div className="home-bottom">
-              <div className="home-edition">01 / O TEMPO É REI</div>
-            </div>
-          </main>
-        )}
-        {currentView === "players" && (
-          <Page
-            title="JOGADORES"
-            kicker="O ELENCO"
-            description="Adicione sua galera antes de partir para o sorteio."
-            back={() => go("home")}
-          >
-            <Players game={game} />
-            <div className="page-actions">
-              <Button
-                className="primary-cta"
-                disabled={data.players.length < 2}
-                onClick={() => go("setup")}
-              >
-                MONTAR SESSÃO <ArrowRight />
-              </Button>
-            </div>
-          </Page>
-        )}
-        {currentView === "setup" && (
-          <Page
-            title="QUEM JOGA?"
-            kicker="NOVA SESSÃO / 01"
-            description={`Escolha de 2 a 4 pessoas. Cada turno terá ${data.settings.selectedTurnMinutes} minutos; a ordem será sorteada.`}
-            back={() => go("home")}
-          >
-            <div className="selection-list">
-              {data.players.map((p) => {
-                const chosen = selected.includes(p.id);
-                return (
-                  <Button
-                    key={p.id}
-                    variant="ghost"
-                    className={`selection-row ${chosen ? "selected" : ""}`}
-                    onClick={() =>
-                      setSelected((ids) =>
-                        chosen
-                          ? ids.filter((id) => id !== p.id)
-                          : ids.length < 4
-                            ? [...ids, p.id]
-                            : ids,
-                      )
-                    }
-                  >
-                    <Avatar player={p} />
-                    <span>{p.name}</span>
-                    <span className="selection-check">{chosen && <Check />}</span>
-                  </Button>
-                );
-              })}
-            </div>
-            <div className="selection-footer">
-              <span>{selected.length} / 4 SELECIONADOS</span>
-              <Button variant="ghost" onClick={() => go("players")}>
-                <Plus /> Adicionar jogador
-              </Button>
-            </div>
-            <div className="page-actions">
-              <Button
-                className="primary-cta"
-                disabled={selected.length < 2}
-                onClick={() => {
-                  try {
-                    game.draw(
-                      selected
-                        .map((id) => data.players.find((p) => p.id === id))
-                        .filter((p): p is Player => !!p),
-                    );
-                    setActionError("");
-                    go("draw");
-                  } catch (error) {
-                    setActionError(
-                      error instanceof Error ? error.message : "Não foi possível sortear a ordem.",
-                    );
-                  }
-                }}
-              >
-                SORTEAR ORDEM <ArrowRight />
-              </Button>
-            </div>
-          </Page>
-        )}
-        {currentView === "draw" && session?.status === "ORDER_READY" && (
-          <Page
-            title="A ORDEM ESTÁ DECIDIDA."
-            kicker="SORTEIO / 02"
-            description={
-              session.players.length === 2
-                ? "Cara ou coroa. O destino escolheu quem começa."
-                : "A cidade escolheu quem vai primeiro."
-            }
-            back={() => {
-              game.discardDraw();
-              go("setup");
-            }}
-          >
-            <div className="draw-list">
-              {session.players.map((p, i) => (
-                <div className="draw-row" key={p.id} style={{ animationDelay: `${i * 100}ms` }}>
-                  <span className="draw-number">0{i + 1}</span>
-                  <Avatar player={p} />
-                  <strong>{p.name}</strong>
-                  {i === 0 && <span className="first-badge">COMEÇA</span>}
-                </div>
-              ))}
-            </div>
-            <div className="page-actions">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  game.discardDraw();
-                  game.draw(session.players);
-                }}
-              >
-                <RotateCcw /> Sortear de novo
-              </Button>
-              <Button
-                className="primary-cta"
-                onClick={() => {
-                  game.begin();
-                  go("session");
-                }}
-              >
-                INICIAR SESSÃO <ArrowRight />
-              </Button>
-            </div>
-          </Page>
-        )}
-        {currentView === "session" && active && session && (
-          <SessionView
-            session={session}
-            game={game}
-            onFinish={(sessionId) => {
-              setSelectedHistory(sessionId);
-              go("summary");
-            }}
+      <LocaleContext.Provider value={locale}>
+        <div className="app-content">
+          <Header
+            go={go}
+            locale={locale}
+            setLocale={(value) => game.changeSettings({ locale: value })}
           />
-        )}
-        {currentView === "history" && (
-          <Page
-            title="HISTÓRICO"
-            kicker="ARQUIVO DE LEONIDA"
-            description="Cada turno tem uma história."
-            back={() => go("home")}
-          >
-            <div className="history-list">
-              {data.history.length ? (
-                data.history.map((s, i) => (
-                  <Button
-                    key={s.id}
-                    variant="ghost"
-                    className="history-row"
-                    onClick={() => {
-                      setSelectedHistory(s.id);
-                      go("summary");
-                    }}
-                  >
-                    <span className="history-index">
-                      {String(data.history.length - i).padStart(2, "0")}
-                    </span>
-                    <span className="history-info">
-                      <strong>
-                        {new Date(s.startedAt ?? s.createdAt).toLocaleDateString("pt-BR", {
-                          day: "2-digit",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </strong>
-                      <small>
-                        {s.players.map((p) => p.name).join(" · ")} — {s.turns.length} turnos
-                      </small>
-                    </span>
-                    <ArrowRight />
-                  </Button>
-                ))
-              ) : (
-                <Empty
-                  icon={<History />}
-                  title="Nada por aqui ainda."
-                  body="Sua primeira sessão vai aparecer aqui."
-                />
-              )}
+          {game.persistence.message && (
+            <div
+              className={`persistence-notice ${game.persistence.state === "unsaved" ? "persistence-error" : ""}`}
+              role="status"
+            >
+              <L>{game.persistence.message}</L>
             </div>
-          </Page>
-        )}
-        {currentView === "summary" && (
-          <Page
-            title="FIM DE JOGO"
-            kicker="RESUMO DA SESSÃO"
-            description="Mais uma noite em Leonida."
-            back={() => go("history")}
-          >
-            <Summary
-              session={data.history.find((s) => s.id === selectedHistory) ?? data.history[0]}
-              onExport={exportSessionReport}
+          )}
+          {actionError && (
+            <div className="persistence-notice persistence-error" role="alert">
+              <L>{actionError}</L>
+            </div>
+          )}
+          {currentView === "home" && (
+            <main className="home-view">
+              <div className="home-copy">
+                <h1 className="home-poster-heading">
+                  <img
+                    className="home-poster"
+                    src="/brand/minutes-in-leonida-lettering.png"
+                    alt={
+                      locale === "pt"
+                        ? "Minutes in Leonida — Seu tempo, sua vez."
+                        : locale === "en"
+                          ? "Minutes in Leonida — Your time, your turn."
+                          : "Minutes in Leonida — Tu tiempo, tu turno."
+                    }
+                  />
+                </h1>
+                <p>
+                  <L>
+                    A turma vai se aventurar pelas ruas da Cidade do Vício, mas só tem um controle?
+                    Revezem os turnos e tentem não chamar a polícia no caminho.
+                  </L>
+                </p>
+                <Button
+                  className="primary-cta"
+                  onClick={() => go(data.players.length >= 2 ? "setup" : "players")}
+                >
+                  <L>MONTAR SESSÃO </L>
+                  <ArrowRight />
+                </Button>
+                <div className="home-steps" aria-label={translate(locale, "Como funciona")}>
+                  <div className="home-step">
+                    <DrawBoxIcon />
+                    <span>
+                      <L>Sortear a ordem</L>
+                    </span>
+                  </div>
+                  <ArrowRight aria-hidden="true" />
+                  <div className="home-step">
+                    <AimFigureIcon />
+                    <span>
+                      <L>Jogar o turno</L>
+                    </span>
+                  </div>
+                  <ArrowRight aria-hidden="true" />
+                  <div className="home-step">
+                    <Gamepad2 aria-hidden="true" />
+                    <span>
+                      <L>Passar o controle</L>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="home-bottom">
+                <div className="home-edition">
+                  <L>01 / O TEMPO É REI</L>
+                </div>
+              </div>
+            </main>
+          )}
+          {currentView === "players" && (
+            <Page
+              title="JOGADORES"
+              kicker="O ELENCO"
+              description="Adicione sua galera antes de partir para o sorteio."
+              back={() => go("home")}
+            >
+              <Players game={game} />
+              <div className="page-actions">
+                <Button
+                  className="primary-cta"
+                  disabled={data.players.length < 2}
+                  onClick={() => go("setup")}
+                >
+                  <L>MONTAR SESSÃO </L>
+                  <ArrowRight />
+                </Button>
+              </div>
+            </Page>
+          )}
+          {currentView === "setup" && (
+            <Page
+              title="QUEM JOGA?"
+              kicker="NOVA SESSÃO / 01"
+              description={`Escolha de 2 a 4 pessoas. Cada turno terá ${data.settings.selectedTurnMinutes} minutos; a ordem será sorteada.`}
+              back={() => go("home")}
+            >
+              <div className="selection-list">
+                {data.players.map((p) => {
+                  const chosen = selected.includes(p.id);
+                  return (
+                    <Button
+                      key={p.id}
+                      variant="ghost"
+                      className={`selection-row ${chosen ? "selected" : ""}`}
+                      onClick={() =>
+                        setSelected((ids) =>
+                          chosen
+                            ? ids.filter((id) => id !== p.id)
+                            : ids.length < 4
+                              ? [...ids, p.id]
+                              : ids,
+                        )
+                      }
+                    >
+                      <Avatar player={p} />
+                      <span>{p.name}</span>
+                      <span className="selection-check">{chosen && <Check />}</span>
+                    </Button>
+                  );
+                })}
+              </div>
+              <div className="selection-footer">
+                <span>
+                  {selected.length} <L> / 4 SELECIONADOS</L>
+                </span>
+                <Button variant="ghost" onClick={() => go("players")}>
+                  <Plus /> <L> Adicionar jogador</L>
+                </Button>
+              </div>
+              <div className="page-actions">
+                <Button
+                  className="primary-cta"
+                  disabled={selected.length < 2}
+                  onClick={() => {
+                    try {
+                      game.draw(
+                        selected
+                          .map((id) => data.players.find((p) => p.id === id))
+                          .filter((p): p is Player => !!p),
+                      );
+                      setActionError("");
+                      go("draw");
+                    } catch (error) {
+                      setActionError(
+                        error instanceof Error
+                          ? error.message
+                          : "Não foi possível sortear a ordem.",
+                      );
+                    }
+                  }}
+                >
+                  <L>SORTEAR ORDEM </L>
+                  <ArrowRight />
+                </Button>
+              </div>
+            </Page>
+          )}
+          {currentView === "draw" && session?.status === "ORDER_READY" && (
+            <Page
+              title="A ORDEM ESTÁ DECIDIDA."
+              kicker="SORTEIO / 02"
+              description={
+                session.players.length === 2
+                  ? "Cara ou coroa. O destino escolheu quem começa."
+                  : "A cidade escolheu quem vai primeiro."
+              }
+              back={() => {
+                game.discardDraw();
+                go("setup");
+              }}
+            >
+              <div className="draw-list">
+                {session.players.map((p, i) => (
+                  <div className="draw-row" key={p.id} style={{ animationDelay: `${i * 100}ms` }}>
+                    <span className="draw-number">0{i + 1}</span>
+                    <Avatar player={p} />
+                    <strong>{p.name}</strong>
+                    {i === 0 && (
+                      <span className="first-badge">
+                        <L>COMEÇA</L>
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="page-actions">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    game.discardDraw();
+                    game.draw(session.players);
+                  }}
+                >
+                  <RotateCcw /> <L> Sortear de novo</L>
+                </Button>
+                <Button
+                  className="primary-cta"
+                  onClick={() => {
+                    game.begin();
+                    go("session");
+                  }}
+                >
+                  <L>INICIAR SESSÃO </L>
+                  <ArrowRight />
+                </Button>
+              </div>
+            </Page>
+          )}
+          {currentView === "session" && active && session && (
+            <SessionView
+              session={session}
+              game={game}
+              onFinish={(sessionId) => {
+                setSelectedHistory(sessionId);
+                go("summary");
+              }}
             />
-            <div className="page-actions">
-              <Button className="primary-cta" onClick={() => go("home")}>
-                VOLTAR AO INÍCIO <ArrowRight />
-              </Button>
-            </div>
-          </Page>
-        )}
-        {currentView === "settings" && (
-          <Page
-            title="AJUSTES"
-            kicker="DO SEU JEITO"
-            description="Tudo fica guardado somente neste aparelho."
-            back={() => go(active ? "session" : "home")}
-          >
-            <Settings game={game} go={go} />
-          </Page>
-        )}
-        <footer className="site-footer">
-          <span>MINUTES IN LEONIDA © 2026</span>
-          <span>FEITO PARA A NOITE DURAR MAIS.</span>
-        </footer>
-      </div>
+          )}
+          {currentView === "history" && (
+            <Page
+              title="HISTÓRICO"
+              kicker="ARQUIVO DE LEONIDA"
+              description="Cada turno tem uma história."
+              back={() => go("home")}
+            >
+              <div className="history-list">
+                {data.history.length ? (
+                  data.history.map((s, i) => (
+                    <Button
+                      key={s.id}
+                      variant="ghost"
+                      className="history-row"
+                      onClick={() => {
+                        setSelectedHistory(s.id);
+                        go("summary");
+                      }}
+                    >
+                      <span className="history-index">
+                        {String(data.history.length - i).padStart(2, "0")}
+                      </span>
+                      <span className="history-info">
+                        <strong>
+                          {new Date(s.startedAt ?? s.createdAt).toLocaleDateString(
+                            locale === "pt" ? "pt-BR" : locale === "es" ? "es-ES" : "en-US",
+                            {
+                              day: "2-digit",
+                              month: "long",
+                              year: "numeric",
+                            },
+                          )}
+                        </strong>
+                        <small>
+                          {s.players.map((p) => p.name).join(" · ")} <L> — </L>
+                          {s.turns.length} <L> turnos</L>
+                        </small>
+                      </span>
+                      <ArrowRight />
+                    </Button>
+                  ))
+                ) : (
+                  <Empty
+                    icon={<History />}
+                    title="Nada por aqui ainda."
+                    body="Sua primeira sessão vai aparecer aqui."
+                  />
+                )}
+              </div>
+            </Page>
+          )}
+          {currentView === "summary" && (
+            <Page
+              title="FIM DE JOGO"
+              kicker="RESUMO DA SESSÃO"
+              description="Mais uma noite em Leonida."
+              back={() => go("history")}
+            >
+              <Summary
+                session={data.history.find((s) => s.id === selectedHistory) ?? data.history[0]}
+                onExport={exportSessionReport}
+              />
+              <div className="page-actions">
+                <Button className="primary-cta" onClick={() => go("home")}>
+                  <L>VOLTAR AO INÍCIO </L>
+                  <ArrowRight />
+                </Button>
+              </div>
+            </Page>
+          )}
+          {currentView === "settings" && (
+            <Page
+              title="AJUSTES"
+              kicker="DO SEU JEITO"
+              description="Tudo fica guardado somente neste aparelho."
+              back={() => go(active ? "session" : "home")}
+            >
+              <Settings game={game} go={go} />
+            </Page>
+          )}
+          <footer className="site-footer">
+            <span className="footer-brand">
+              MINUTES IN LEONIDA <span>© 2026</span>
+            </span>
+            <span className="footer-credit">
+              <L>FEITO COM CARINHO POR</L> <strong>Kalyel Nunes Laurindo</strong>
+            </span>
+          </footer>
+        </div>
+      </LocaleContext.Provider>
     </div>
   );
 }
@@ -478,14 +596,18 @@ function Page({
   return (
     <main className="inner-page">
       <Button variant="ghost" className="back-button" onClick={back}>
-        <ArrowLeft /> VOLTAR
+        <ArrowLeft /> <L> VOLTAR</L>
       </Button>
       <div className="page-heading">
         <span className="eyebrow">
-          <span className="eyebrow-line" /> {kicker}
+          <span className="eyebrow-line" /> <L>{kicker}</L>
         </span>
-        <h1>{title}</h1>
-        <p>{description}</p>
+        <h1>
+          <L>{title}</L>
+        </h1>
+        <p>
+          <L>{description}</L>
+        </p>
       </div>
       {children}
     </main>
@@ -495,12 +617,17 @@ function Empty({ icon, title, body }: { icon: React.ReactNode; title: string; bo
   return (
     <div className="empty-state">
       {icon}
-      <strong>{title}</strong>
-      <span>{body}</span>
+      <strong>
+        <L>{title}</L>
+      </strong>
+      <span>
+        <L>{body}</L>
+      </span>
     </div>
   );
 }
 function Players({ game }: { game: Game }) {
+  const locale = game.data.settings.locale ?? "pt";
   const [name, setName] = useState("");
   const [color, setColor] = useState(0);
   const [editing, setEditing] = useState<string | null>(null);
@@ -520,17 +647,23 @@ function Players({ game }: { game: Game }) {
   return (
     <div className="two-column">
       <div className="glass-panel form-panel">
-        <span className="panel-label">{editing ? "EDITAR JOGADOR" : "NOVO JOGADOR"}</span>
+        <span className="panel-label">
+          <L>{editing ? "EDITAR JOGADOR" : "NOVO JOGADOR"}</L>
+        </span>
         <form onSubmit={submit}>
-          <label htmlFor="player-name">Nome</label>
+          <label htmlFor="player-name">
+            <L>Nome</L>
+          </label>
           <input
             id="player-name"
             maxLength={24}
-            placeholder="Como te chamam?"
+            placeholder={translate(locale, "Como te chamam?")}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <label>Escolha sua cor</label>
+          <label>
+            <L>Escolha sua cor</L>
+          </label>
           <div className="swatches">
             {palettes.map((palette, i) => (
               <Button
@@ -538,7 +671,7 @@ function Players({ game }: { game: Game }) {
                 variant="ghost"
                 key={palette}
                 className={`swatch ${palette} ${color === i ? "swatch-active" : ""}`}
-                aria-label={`Cor ${i + 1}`}
+                aria-label={`${translate(locale, "Cor")} ${i + 1}`}
                 aria-pressed={color === i}
                 onClick={() => setColor(i)}
               />
@@ -546,13 +679,13 @@ function Players({ game }: { game: Game }) {
           </div>
           {error && (
             <p className="form-error" role="alert">
-              {error}
+              <L>{error}</L>
             </p>
           )}
           <div className="form-actions">
             <Button type="submit" className="form-submit">
               {editing ? <Check /> : <Plus />}
-              {editing ? "SALVAR" : "ADICIONAR"}
+              <L>{editing ? "SALVAR" : "ADICIONAR"}</L>
             </Button>
             {editing && (
               <Button
@@ -564,7 +697,7 @@ function Players({ game }: { game: Game }) {
                   setError("");
                 }}
               >
-                Cancelar
+                <L>Cancelar</L>
               </Button>
             )}
           </div>
@@ -572,7 +705,9 @@ function Players({ game }: { game: Game }) {
       </div>
       <div className="roster">
         <div className="section-title">
-          <span>JOGADORES SALVOS</span>
+          <span>
+            <L>JOGADORES SALVOS</L>
+          </span>
           <span>{game.data.players.length.toString().padStart(2, "0")}</span>
         </div>
         {game.data.players.length ? (
@@ -583,8 +718,8 @@ function Players({ game }: { game: Game }) {
               <Button
                 variant="ghost"
                 size="icon"
-                title={`Editar ${p.name}`}
-                aria-label={`Editar ${p.name}`}
+                title={`${translate(locale, "Editar")} ${p.name}`}
+                aria-label={`${translate(locale, "Editar")} ${p.name}`}
                 onClick={() => {
                   setEditing(p.id);
                   setName(p.name);
@@ -595,15 +730,15 @@ function Players({ game }: { game: Game }) {
                 <Pencil />
               </Button>
               <Confirm
-                title={`Remover ${p.name}?`}
+                title={`${translate(locale, "Remover")} ${p.name}?`}
                 description="O jogador será removido da sua lista. Sessões antigas continuarão intactas."
                 action={() => game.removePlayer(p.id)}
               >
                 <Button
                   variant="ghost"
                   size="icon"
-                  title={`Remover ${p.name}`}
-                  aria-label={`Remover ${p.name}`}
+                  title={`${translate(locale, "Remover")} ${p.name}`}
+                  aria-label={`${translate(locale, "Remover")} ${p.name}`}
                 >
                   <Trash2 />
                 </Button>
@@ -640,26 +775,34 @@ function SessionView({
     <main className={`session-view ${urgent ? "urgent" : ""}`}>
       <div className="session-top">
         <span className="eyebrow">
-          <span className="eyebrow-line" /> SESSÃO EM ANDAMENTO
+          <span className="eyebrow-line" /> <L> SESSÃO EM ANDAMENTO</L>
         </span>
         <span className="session-live">
           <span />
-          {paused ? "PAUSADA" : "AO VIVO"}
+          <L>{paused ? "PAUSADA" : "AO VIVO"}</L>
         </span>
       </div>
       <div className="session-stage">
-        <div className="turn-label">{paused ? "SESSÃO PAUSADA" : "AGORA É A VEZ DE"}</div>
+        <div className="turn-label">
+          <L>{paused ? "SESSÃO PAUSADA" : "AGORA É A VEZ DE"}</L>
+        </div>
         <h1 key={player.id} className="current-player">
           {player.name}
         </h1>
-        <div className="timer" role="timer" aria-label={`Tempo restante: ${clockText(left)}`}>
+        <div
+          className="timer"
+          role="timer"
+          aria-label={`${translate(game.data.settings.locale ?? "pt", "Tempo restante")}: ${clockText(left)}`}
+        >
           {clockText(left)}
         </div>
         <div className="timer-track">
           <span style={{ width: `${(left / session.turnDurationMs) * 100}%` }} />
         </div>
         <div className="next-up">
-          <span>PRÓXIMO NA FILA</span>
+          <span>
+            <L>PRÓXIMO NA FILA</L>
+          </span>
           <div>
             <Avatar player={next} /> <strong>{next.name}</strong>
             <ArrowRight />
@@ -669,15 +812,15 @@ function SessionView({
       <div className="session-controls">
         {paused ? (
           <Button className="death-button resume-button" onClick={game.togglePause}>
-            <Play /> RETOMAR
+            <Play /> <L> RETOMAR</L>
           </Button>
         ) : (
           <>
             <Button className="death-button" onClick={game.die}>
-              <Skull /> MORREU
+              <Skull /> <L> MORREU</L>
             </Button>
             <Button className="pause-button" onClick={game.togglePause}>
-              <Pause /> PAUSAR
+              <Pause /> <L> PAUSAR</L>
             </Button>
           </>
         )}
@@ -690,12 +833,15 @@ function SessionView({
           }}
         >
           <Button variant="ghost" className="end-button">
-            Encerrar sessão <ArrowRight />
+            <L>Encerrar sessão </L>
+            <ArrowRight />
           </Button>
         </Confirm>
       </div>
       <div className="order-strip">
-        <span>ORDEM DA NOITE</span>
+        <span>
+          <L>ORDEM DA NOITE</L>
+        </span>
         <div>
           {session.players.map((p, i) => (
             <span key={p.id} className={i === session.index ? "order-active" : ""}>
@@ -707,7 +853,10 @@ function SessionView({
       {game.signal && (
         <div className="turn-alert" role="status">
           {game.signal === "timeout" ? "TEMPO!" : "NOVA VEZ"}{" "}
-          <span>Agora é a vez de {player.name}</span>
+          <span>
+            <L>Agora é a vez de </L>
+            {player.name}
+          </span>
         </div>
       )}
     </main>
@@ -729,7 +878,9 @@ function Summary({
     <div className="summary-view">
       <div className="summary-metrics">
         <div>
-          <small>DURAÇÃO</small>
+          <small>
+            <L>DURAÇÃO</L>
+          </small>
           <strong>
             {durationText(
               (session.endedAt ?? Date.now()) - (session.startedAt ?? session.createdAt),
@@ -737,16 +888,22 @@ function Summary({
           </strong>
         </div>
         <div>
-          <small>TURNOS</small>
+          <small>
+            <L>TURNOS</L>
+          </small>
           <strong>{session.turns.length}</strong>
         </div>
         <div>
-          <small>MORTES</small>
+          <small>
+            <L>MORTES</L>
+          </small>
           <strong>{records.reduce((sum, r) => sum + r.deaths, 0)}</strong>
         </div>
       </div>
       <div className="section-title">
-        <span>POR JOGADOR</span>
+        <span>
+          <L>POR JOGADOR</L>
+        </span>
       </div>
       <div className="stat-list">
         {records.map((r) => (
@@ -754,32 +911,50 @@ function Summary({
             <Avatar player={r.player} />
             <div className="stat-name">
               <strong>{r.player.name}</strong>
-              <small>{durationText(r.totalMs)} jogados</small>
+              <small>
+                {durationText(r.totalMs)} <L> jogados</L>
+              </small>
             </div>
             <div className="stat-numbers">
               <span>
-                {r.turns} <small>turnos</small>
+                {r.turns}{" "}
+                <small>
+                  <L>turnos</L>
+                </small>
               </span>
               <span>
-                {r.deaths} <small>mortes</small>
+                {r.deaths}{" "}
+                <small>
+                  <L>mortes</L>
+                </small>
               </span>
               <span>
-                {r.timeouts} <small>tempos</small>
+                {r.timeouts}{" "}
+                <small>
+                  <L>tempos</L>
+                </small>
               </span>
             </div>
             <div className="stat-extra">
-              Média {durationText(r.averageMs)} · Maior turno {durationText(r.longestMs)}
+              <L>Média </L>
+              {durationText(r.averageMs)} <L> · Maior turno </L>
+              {durationText(r.longestMs)}
             </div>
           </div>
         ))}
       </div>
       <div className="section-title">
-        <span>LINHA DO TEMPO</span>
+        <span>
+          <L>LINHA DO TEMPO</L>
+        </span>
       </div>
       <div className="timeline">
         {session.turns.map((t) => (
           <div key={t.id}>
-            <span>#{String(t.sequence).padStart(2, "0")}</span>
+            <span>
+              <L>#</L>
+              {String(t.sequence).padStart(2, "0")}
+            </span>
             <strong>{session.players.find((p) => p.id === t.playerId)?.name}</strong>
             <span>
               {t.endReason === "DEATH"
@@ -794,7 +969,7 @@ function Summary({
       </div>
       <div className="page-actions">
         <Button variant="outline" onClick={() => onExport(session)}>
-          <Download /> Exportar placar (.md)
+          <Download /> <L> Exportar placar (.md)</L>
         </Button>
       </div>
     </div>
@@ -802,6 +977,7 @@ function Summary({
 }
 function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
   const settings = game.data.settings;
+  const locale = settings.locale ?? "pt";
   const supported = typeof window !== "undefined" && "Notification" in window;
   const [permission, setPermission] = useState(supported ? Notification.permission : "unavailable");
   const [presetDraft, setPresetDraft] = useState(String(settings.selectedTurnMinutes));
@@ -833,7 +1009,10 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
       const raw = await file.text();
       if (
         !window.confirm(
-          "Restaurar esta cópia substituirá os jogadores, sessão, histórico e ajustes atuais. Continuar?",
+          translate(
+            locale,
+            "Restaurar esta cópia substituirá os jogadores, sessão, histórico e ajustes atuais. Continuar?",
+          ),
         )
       )
         return;
@@ -859,15 +1038,21 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
     <div className="settings-view">
       <div className="setting-group">
         <div className="section-title">
-          <span>DURAÇÃO DOS TURNOS</span>
+          <span>
+            <L>DURAÇÃO DOS TURNOS</L>
+          </span>
         </div>
         <div className="setting-row">
           <span className="setting-icon">
             <Clock3 />
           </span>
           <label className="setting-copy" htmlFor="turn-preset">
-            <strong>Preset da próxima sessão</strong>
-            <small>Esta escolha fica salva; sessões em andamento mantêm o tempo original.</small>
+            <strong>
+              <L>Preset da próxima sessão</L>
+            </strong>
+            <small>
+              <L>Esta escolha fica salva; sessões em andamento mantêm o tempo original.</L>
+            </small>
           </label>
           <select
             id="turn-preset"
@@ -878,13 +1063,15 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
           >
             {settings.turnPresets.map((minutes) => (
               <option key={minutes} value={minutes}>
-                {minutes} min
+                {minutes} <L> min</L>
               </option>
             ))}
           </select>
         </div>
         <div className="preset-editor">
-          <label htmlFor="preset-minutes">Criar preset (1 a 180 minutos)</label>
+          <label htmlFor="preset-minutes">
+            <L>Criar preset (1 a 180 minutos)</L>
+          </label>
           <div>
             <input
               id="preset-minutes"
@@ -896,12 +1083,12 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
               onChange={(event) => setPresetDraft(event.target.value)}
             />
             <Button variant="outline" onClick={savePreset}>
-              <Plus /> Salvar preset
+              <Plus /> <L> Salvar preset</L>
             </Button>
           </div>
           {presetError && (
             <p className="form-error" role="alert">
-              {presetError}
+              <L>{presetError}</L>
             </p>
           )}
           {settings.turnPresets.length > 1 && (
@@ -916,9 +1103,10 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
                       turnPresets: settings.turnPresets.filter((value) => value !== minutes),
                     })
                   }
-                  aria-label={`Remover preset de ${minutes} minutos`}
+                  aria-label={translate(locale, `Remover preset de ${minutes} minutos`)}
                 >
-                  {minutes} min <X />
+                  {minutes} <L> min </L>
+                  <X />
                 </Button>
               ))}
             </div>
@@ -927,15 +1115,21 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
       </div>
       <div className="setting-group">
         <div className="section-title">
-          <span>ALERTAS</span>
+          <span>
+            <L>ALERTAS</L>
+          </span>
         </div>
         <label className="setting-row">
           <span className="setting-icon">
             <Volume2 />
           </span>
           <span className="setting-copy">
-            <strong>Alarme sonoro</strong>
-            <small>Aviso quando o tempo acabar e o app estiver aberto</small>
+            <strong>
+              <L>Alarme sonoro</L>
+            </strong>
+            <small>
+              <L>Aviso quando o tempo acabar e o app estiver aberto</L>
+            </small>
           </span>
           <input
             type="checkbox"
@@ -948,8 +1142,13 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
             <Volume2 />
           </span>
           <label className="setting-copy" htmlFor="volume">
-            <strong>Volume</strong>
-            <small>{Math.round(settings.volume * 100)}%</small>
+            <strong>
+              <L>Volume</L>
+            </strong>
+            <small>
+              {Math.round(settings.volume * 100)}
+              <L>%</L>
+            </small>
           </label>
           <input
             id="volume"
@@ -965,17 +1164,21 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
         <Button
           variant="outline"
           className="setting-action"
-          onClick={() => testAlarm(settings.volume)}
+          onClick={() => testAlarm(settings.volume, locale)}
         >
-          <Play /> Testar alarme
+          <Play /> <L> Testar alarme</L>
         </Button>
         <label className="setting-row">
           <span className="setting-icon">
             <Bell />
           </span>
           <span className="setting-copy">
-            <strong>Vibração</strong>
-            <small>Quando disponível no aparelho</small>
+            <strong>
+              <L>Vibração</L>
+            </strong>
+            <small>
+              <L>Quando disponível no aparelho</L>
+            </small>
           </span>
           <input
             type="checkbox"
@@ -988,15 +1191,19 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
             <Bell />
           </span>
           <span className="setting-copy">
-            <strong>Notificações</strong>
+            <strong>
+              <L>Notificações</L>
+            </strong>
             <small>
-              {permission === "granted"
-                ? "Permitidas"
-                : permission === "denied"
-                  ? "Bloqueadas pelo navegador"
-                  : permission === "unavailable"
-                    ? "Não disponíveis neste aparelho"
-                    : "Permissão opcional"}
+              <L>
+                {permission === "granted"
+                  ? "Permitidas"
+                  : permission === "denied"
+                    ? "Bloqueadas pelo navegador"
+                    : permission === "unavailable"
+                      ? "Não disponíveis neste aparelho"
+                      : "Permissão opcional"}
+              </L>
             </small>
           </span>
           {permission === "default" && (
@@ -1011,48 +1218,58 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
                 }
               }}
             >
-              Permitir
+              <L>Permitir</L>
             </Button>
           )}
         </div>
         {permission === "granted" && (
           <p className="setting-note">
-            O navegador pode mostrar uma notificação quando o app detectar o fim do turno. Ele não
-            garante alertas se o sistema suspender ou fechar o app.
+            <L>
+              O navegador pode mostrar uma notificação quando o app detectar o fim do turno. Ele não
+              garante alertas se o sistema suspender ou fechar o app.
+            </L>
           </p>
         )}
       </div>
       <div className="setting-group">
         <div className="section-title">
-          <span>APLICATIVO</span>
+          <span>
+            <L>APLICATIVO</L>
+          </span>
         </div>
         <div className="setting-row">
           <span className="setting-icon">
             <Download />
           </span>
           <span className="setting-copy">
-            <strong>Instalar no aparelho</strong>
+            <strong>
+              <L>Instalar no aparelho</L>
+            </strong>
             <small>
-              No navegador, escolha “Adicionar à tela inicial”. Após abrir conectado uma vez,
-              funciona offline no site publicado.
+              <L>
+                No navegador, escolha “Adicionar à tela inicial”. Após abrir conectado uma vez,
+                funciona offline no site publicado.
+              </L>
             </small>
           </span>
         </div>
         <Button variant="outline" className="setting-action" onClick={downloadBackup}>
-          <Download /> Baixar cópia de segurança
+          <Download /> <L> Baixar cópia de segurança</L>
         </Button>
         <label className="backup-restore">
-          Restaurar cópia de segurança
+          <L>Restaurar cópia de segurança</L>
           <input type="file" accept="application/json,.json" onChange={restoreBackup} />
         </label>
         {backupError && (
           <p className="setting-note" role="status">
-            {backupError}
+            <L>{backupError}</L>
           </p>
         )}
         <p className="setting-note">
-          Guarde o arquivo fora do navegador para recuperar seus jogadores e histórico se os dados
-          locais forem apagados.
+          <L>
+            Guarde o arquivo fora do navegador para recuperar seus jogadores e histórico se os dados
+            locais forem apagados.
+          </L>
         </p>
         <Confirm
           title="Apagar todos os dados?"
@@ -1063,7 +1280,7 @@ function Settings({ game, go }: { game: Game; go: (v: View) => void }) {
           }}
         >
           <Button variant="ghost" className="danger-action">
-            <Trash2 /> Apagar todos os dados
+            <Trash2 /> <L> Apagar todos os dados</L>
           </Button>
         </Confirm>
       </div>

@@ -67,6 +67,30 @@ describe("versioned local repository", () => {
     expect(load().data.session?.turnDurationMs).toBe(12 * 60_000);
   });
 
+  it("persists the selected interface language in the versioned local repository", () => {
+    vi.stubGlobal("localStorage", storage);
+    const spanish = {
+      ...sampleData(),
+      settings: { ...defaults.settings, locale: "es" as const },
+    };
+
+    expect(save(spanish).ok).toBe(true);
+    expect(load().data.settings.locale).toBe("es");
+    expect(isAppData({ ...spanish, settings: { ...spanish.settings, locale: "fr" } })).toBe(false);
+  });
+
+  it("continues to load version 2 data created before a locale was added", () => {
+    const oldSettings = { ...defaults.settings } as Record<string, unknown>;
+    delete oldSettings["locale"];
+
+    expect(
+      isAppData({
+        ...defaults,
+        settings: oldSettings,
+      }),
+    ).toBe(true);
+  });
+
   it("recovers the newest valid backup and repairs the primary slot", () => {
     vi.stubGlobal("localStorage", storage);
     const older = { revision: 1, data: defaults };

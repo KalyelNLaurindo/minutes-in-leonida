@@ -11,7 +11,7 @@ export function primeAudio() {
   }
 }
 export function alarm(
-  settings: Pick<Settings, "alarm" | "volume" | "vibration">,
+  settings: Pick<Settings, "alarm" | "volume" | "vibration" | "locale">,
   nextName: string,
 ) {
   if (settings.alarm) {
@@ -48,27 +48,37 @@ export function alarm(
     }
   try {
     if ("Notification" in window && Notification.permission === "granted") {
-      const message = `Agora é a vez de ${nextName}.`;
+      const locale = settings.locale ?? "pt";
+      const message =
+        locale === "en"
+          ? `It’s ${nextName}’s turn.`
+          : locale === "es"
+            ? `Es el turno de ${nextName}.`
+            : `Agora é a vez de ${nextName}.`;
+      const title = locale === "en" ? "TIME!" : locale === "es" ? "¡TIEMPO!" : "TEMPO!";
       if ("serviceWorker" in navigator) {
         void navigator.serviceWorker.ready
           .then((registration) =>
-            registration.showNotification("TEMPO!", { body: message, tag: "leonida-turn" }),
+            registration.showNotification(title, { body: message, tag: "leonida-turn" }),
           )
           .catch(() => {
             try {
-              new Notification("TEMPO!", { body: message });
+              new Notification(title, { body: message });
             } catch {
               /* Notification permission may change while the async request is pending. */
             }
           });
       } else {
-        new Notification("TEMPO!", { body: message });
+        new Notification(title, { body: message });
       }
     }
   } catch {
     /* Notifications are optional and may be denied by the browser. */
   }
 }
-export function testAlarm(volume: number) {
-  alarm({ alarm: true, volume, vibration: false }, "próximo jogador");
+export function testAlarm(volume: number, locale: Settings["locale"] = "pt") {
+  alarm(
+    { alarm: true, volume, vibration: false, locale },
+    locale === "en" ? "next player" : locale === "es" ? "siguiente jugador" : "próximo jogador",
+  );
 }

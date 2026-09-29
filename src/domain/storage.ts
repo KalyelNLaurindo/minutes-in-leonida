@@ -137,6 +137,10 @@ function validSession(value: unknown): value is Session {
 function validSettings(value: unknown): value is Settings {
   return (
     isRecord(value) &&
+    (value["locale"] === undefined ||
+      value["locale"] === "pt" ||
+      value["locale"] === "en" ||
+      value["locale"] === "es") &&
     typeof value.alarm === "boolean" &&
     typeof value.vibration === "boolean" &&
     isFiniteNumber(value.volume) &&

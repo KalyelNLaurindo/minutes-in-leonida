@@ -44,4 +44,17 @@ describe("session report", () => {
 
     expect(buildSessionReport(completed)).toContain("Ana \\| Noite");
   });
+
+  it("exports the selected language for English and Spanish", () => {
+    const completed = end(
+      start(
+        createSession(players, 0, 5, () => 0),
+        1_000,
+      ),
+      2_000,
+    );
+
+    expect(buildSessionReport(completed, "en")).toContain("# Final score");
+    expect(buildSessionReport(completed, "es")).toContain("# Marcador final");
+  });
 });

@@ -29,6 +29,7 @@ export type Session = {
   turns: Turn[];
 };
 export type Settings = {
+  locale?: "pt" | "en" | "es";
   alarm: boolean;
   volume: number;
   vibration: boolean;
@@ -49,6 +50,7 @@ export const defaults: AppData = {
   session: null,
   history: [],
   settings: {
+    locale: "pt",
     alarm: true,
     volume: 0.7,
     vibration: true,
