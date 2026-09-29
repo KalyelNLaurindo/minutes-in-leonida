@@ -202,7 +202,7 @@ export default function LeonidaApp() {
           <main className="home-view">
             <div className="home-copy">
               <span className="eyebrow">
-                <span className="eyebrow-line" /> O JOGO NÃO PARA
+                <span className="eyebrow-line" /> PRA GALERA
               </span>
               <h1>
                 MINUTES
