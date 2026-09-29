@@ -106,7 +106,6 @@ function Header({ view, go, active }: { view: View; go: (v: View) => void; activ
         <Logo />
       </Button>
       <div className="header-right">
-        <span className="header-caption">SEU TEMPO. SUA VEZ.</span>
         <Button
           variant="ghost"
           size="icon"
@@ -202,7 +201,7 @@ export default function LeonidaApp() {
           <main className="home-view">
             <div className="home-copy">
               <span className="eyebrow">
-                <span className="eyebrow-line" /> PRA GALERA
+                <span className="eyebrow-line" /> SEU TEMPO. SUA VEZ.
               </span>
               <h1>
                 MINUTES
