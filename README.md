@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./public/brand/minutes-in-leonida-poster.jpg" alt="Minutes in Leonida Poster" width="680" style="max-width: 100%; border-radius: 12px; margin-bottom: 8px;" />
+
 # MINUTES IN LEONIDA 🎮
 
 ### Seu tempo. Sua vez. O cronômetro da jogatina compartilhada.
@@ -23,6 +25,10 @@ Uma ferramenta gratuita, feita por fãs, para quem divide um único controle e v
 
 ---
 
+> 🇺🇸 **English Overview:**  
+> **Minutes in Leonida** is a free, fan-made, offline-first web app designed for friends and families who share a single console and controller. It randomizes player turns, tracks playtime with custom alarms, records game-overs (deaths), and computes a complete session scoreboard — 100% private, client-side, with zero registration or cloud servers.
+
+
 ## 💡 O que é o Minutes in Leonida?
 
 Quando a galera se reúne para jogar videogame e só tem **um controle** ou **um console**, sempre rola aquela dúvida: _"Quem joga agora?", "Quanto tempo ele já tá jogando?", "É a minha vez!"_.
@@ -42,10 +48,15 @@ Tudo roda direto no navegador do celular, tablet ou computador. Você não preci
 
 Você não precisa entender nada de programação para usar. Basta seguir estes passos:
 
-### 1. Abra no celular, tablet ou PC
+### 📱 1. Abra no seu celular, tablet ou computador
 
-Acesse pelo navegador: **[kalyelnlaurindo.github.io/minutes-in-leonida](https://kalyelnlaurindo.github.io/minutes-in-leonida/)**  
-_(Dica: no celular, você pode tocar em "Adicionar à tela de início" para usar como se fosse um aplicativo normal, inclusive sem internet)._
+> [!TIP]
+> ### 🚀 [CLIQUE AQUI PARA ABRIR O APP: kalyelnlaurindo.github.io/minutes-in-leonida](https://kalyelnlaurindo.github.io/minutes-in-leonida/)
+> 
+> 📲 **Perfeito para deixar no tablet ou celular apoiado perto do videogame:**
+> - **Funciona direto no navegador**, sem precisar de conta, login ou downloads pesados de loja.
+> - **Dica de ouro:** Abra no Chrome ou Safari, toque no menu e escolha **"Adicionar à tela de início"** (ou *Instalar aplicativo*). O app vai para a sua tela principal e funciona **100% offline**, mesmo sem Wi-Fi ou sinal de internet!
+
 
 ### 2. Cadastre a galera
 
